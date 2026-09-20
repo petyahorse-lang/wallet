@@ -1,0 +1,1644 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Кошелёк">
+<meta name="theme-color" content="#0E7A5F" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0C1311" media="(prefers-color-scheme: dark)">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="icon" href="icon-192.png">
+<title>Кошелёк BYN</title>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Public+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+:root{ padding-top:env(safe-area-inset-top, 0px); padding-bottom:env(safe-area-inset-bottom, 0px); color-scheme:light dark; }
+html,body{margin:0}
+img{max-width:100%}
+[hidden]{display:none!important}
+</style>
+</head>
+<body>
+<style>
+:root{
+  --bg:#F1F3F2; --surface:#FFFFFF; --surface-2:#E8EDEB; --ink:#141C1A; --muted:#63736E;
+  --line:#D8E0DD; --line-soft:#E6EBE9; --chip:#EDF2F0;
+  --accent:#0E7A5F; --accent-ink:#FFFFFF; --pos:#0E7A5F; --neg:#B4442F; --warn:#9A6B0A;
+  --shadow:0 1px 2px rgba(20,35,30,.06), 0 10px 26px -16px rgba(20,35,30,.30);
+  --f-display:'Bricolage Grotesque', ui-sans-serif, system-ui, sans-serif;
+  --f-body:'Public Sans', ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --f-num:'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+  --r:14px;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0C1311; --surface:#151E1B; --surface-2:#1D2724; --ink:#E7EDEA; --muted:#8A9A94;
+    --line:#25322E; --line-soft:#1D2724; --chip:#1D2724;
+    --accent:#2FBE93; --accent-ink:#052018; --pos:#3ECFA1; --neg:#F0705A; --warn:#E3AE3A;
+    --shadow:0 1px 2px rgba(0,0,0,.45), 0 14px 30px -18px rgba(0,0,0,.75);
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0C1311; --surface:#151E1B; --surface-2:#1D2724; --ink:#E7EDEA; --muted:#8A9A94;
+  --line:#25322E; --line-soft:#1D2724; --chip:#1D2724;
+  --accent:#2FBE93; --accent-ink:#052018; --pos:#3ECFA1; --neg:#F0705A; --warn:#E3AE3A;
+  --shadow:0 1px 2px rgba(0,0,0,.45), 0 14px 30px -18px rgba(0,0,0,.75);
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0; background:var(--bg); color:var(--ink);
+  font-family:var(--f-body); font-size:15px; line-height:1.45;
+  display:flex; flex-direction:column; overflow:hidden; -webkit-font-smoothing:antialiased;
+}
+button,input,select,textarea{font:inherit; color:inherit}
+button{cursor:pointer; background:none; border:none}
+:focus-visible{outline:2px solid var(--accent); outline-offset:2px; border-radius:8px}
+
+header.top{flex:none; padding:13px 16px 11px; background:var(--surface); border-bottom:1px solid var(--line-soft)}
+.topRow{display:flex; align-items:flex-start; justify-content:space-between; gap:10px}
+.eyebrow{font-size:11px; letter-spacing:.09em; text-transform:uppercase; color:var(--muted); font-weight:600}
+.total{font-family:var(--f-display); font-size:33px; font-weight:800; line-height:1.05; letter-spacing:-.02em; font-variant-numeric:tabular-nums; margin-top:2px}
+.total small{font-size:15px; font-weight:600; color:var(--muted); margin-left:5px}
+.topTools{display:flex; flex-direction:column; align-items:flex-end; gap:6px}
+.pill{display:inline-flex; align-items:center; gap:6px; font-size:11px; font-weight:600; color:var(--muted); border:1px solid var(--line); border-radius:999px; padding:4px 9px; white-space:nowrap}
+.pill i{width:6px; height:6px; border-radius:50%; background:var(--muted); display:block}
+.pill.ok i{background:var(--pos)} .pill.wait i{background:var(--warn)} .pill.err i{background:var(--neg)}
+.pill.err{color:var(--neg); border-color:var(--neg)}
+.eye{font-size:12px; color:var(--muted); font-weight:600; min-height:32px; padding:6px 8px; margin:-6px -8px}
+
+main{flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch}
+.wrap{padding:16px 16px 96px; display:flex; flex-direction:column; gap:16px; max-width:720px; margin:0 auto}
+
+nav.tabs{flex:none; display:grid; grid-template-columns:repeat(5,1fr); background:var(--surface); border-top:1px solid var(--line-soft); padding-bottom:env(safe-area-inset-bottom, 0px)}
+nav.tabs button{min-height:52px; padding:9px 2px 10px; font-size:11px; font-weight:600; color:var(--muted); border-top:2px solid transparent; margin-top:-1px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px; line-height:1}
+nav.tabs button .ti{font-size:17px; line-height:1}
+nav.tabs button[aria-current="true"]{color:var(--accent); border-top-color:var(--accent)}
+
+/* Крупная кнопка добавления: большой палец достаёт её не глядя. */
+.fab{
+  position:fixed; right:16px; z-index:30;
+  bottom:calc(env(safe-area-inset-bottom, 0px) + 66px);
+  width:60px; height:60px; border-radius:50%;
+  background:var(--accent); color:var(--accent-ink);
+  font-size:30px; line-height:1; font-weight:400;
+  display:grid; place-items:center;
+  box-shadow:0 6px 20px -6px rgba(0,0,0,.45);
+}
+.fab:active{transform:scale(.96)}
+@media (prefers-reduced-motion:reduce){.fab:active{transform:none}}
+
+/* Выбор типа операции: пять крупных строк, попадаешь пальцем сразу. */
+.pickList{display:flex; flex-direction:column; gap:9px}
+.pick{
+  display:flex; align-items:center; gap:12px; width:100%; text-align:left;
+  min-height:58px; padding:12px 14px; border-radius:14px;
+  background:var(--surface-2); font-size:16px; font-weight:600;
+}
+.pick .pi{width:38px; height:38px; flex:none; border-radius:11px; background:var(--surface); display:grid; place-items:center; font-size:19px}
+.pick .ps{display:block; font-size:12px; font-weight:400; color:var(--muted); margin-top:2px}
+.pick.primary{background:var(--accent); color:var(--accent-ink)}
+.pick.primary .pi{background:rgba(255,255,255,.18)}
+.pick.primary .ps{color:rgba(255,255,255,.75)}
+
+/* Сводка месяца на главной. */
+.sum2{display:grid; grid-template-columns:1fr 1fr; gap:1px; background:var(--line-soft); border-radius:var(--r); overflow:hidden}
+.sum2 div{background:var(--surface); padding:11px 13px}
+.sum2 .k{font-size:11px; letter-spacing:.05em; text-transform:uppercase; color:var(--muted); font-weight:600}
+.sum2 .v{font-family:var(--f-num); font-size:17px; font-weight:600; font-variant-numeric:tabular-nums; margin-top:2px}
+
+.card{background:var(--surface); border:1px solid var(--line-soft); border-radius:var(--r); box-shadow:var(--shadow)}
+.sect{display:flex; flex-direction:column; gap:10px}
+h2.sh{font-family:var(--f-display); font-size:13px; font-weight:600; letter-spacing:.06em; text-transform:uppercase; color:var(--muted); margin:0}
+.accRow{display:flex; align-items:center; gap:12px; min-height:56px; padding:13px 14px; border-bottom:1px solid var(--line-soft)}
+.accRow:last-child{border-bottom:none}
+.accIco{width:34px; height:34px; flex:none; border-radius:10px; background:var(--chip); display:grid; place-items:center; font-size:17px}
+.accName{flex:1; font-weight:500}
+.accVal{font-family:var(--f-num); font-weight:500; font-variant-numeric:tabular-nums; white-space:nowrap}
+
+.actions{display:grid; grid-template-columns:repeat(2,1fr); gap:10px}
+.act{border-radius:var(--r); min-height:52px; padding:14px; font-weight:600; font-size:14px; display:flex; align-items:center; gap:9px; border:1px solid var(--line); background:var(--surface); box-shadow:var(--shadow); text-align:left}
+.act b{font-size:17px; line-height:1; font-weight:400}
+.act.primary{background:var(--accent); color:var(--accent-ink); border-color:transparent}
+
+.opRow{display:flex; align-items:center; gap:11px; min-height:56px; padding:12px 14px; width:100%; border-bottom:1px solid var(--line-soft); text-align:left}
+.opRow:last-child{border-bottom:none}
+.opIco{width:30px; height:30px; flex:none; border-radius:9px; background:var(--chip); display:grid; place-items:center; font-size:15px}
+.opMid{flex:1; min-width:0}
+.opTitle{font-weight:500; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+.opSub{font-size:12px; color:var(--muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+.opAmt{font-family:var(--f-num); font-weight:500; font-variant-numeric:tabular-nums; white-space:nowrap}
+.opAmt.pos{color:var(--pos)} .opAmt.neg{color:var(--neg)}
+.unsynced{font-size:10px; color:var(--warn); margin-left:5px}
+
+.dayHead{font-size:11px; font-weight:600; letter-spacing:.07em; text-transform:uppercase; color:var(--muted); padding:14px 2px 6px}
+.empty{padding:26px 18px; text-align:center; color:var(--muted); font-size:14px}
+.empty b{display:block; color:var(--ink); font-weight:600; margin-bottom:4px; font-family:var(--f-display)}
+
+.seg{display:flex; gap:4px; background:var(--surface-2); padding:4px; border-radius:11px}
+.seg button{flex:1; min-height:44px; padding:10px 4px; border-radius:8px; font-size:13px; font-weight:600; color:var(--muted)}
+.seg button[aria-pressed="true"]{background:var(--surface); color:var(--ink); box-shadow:0 1px 2px rgba(0,0,0,.10)}
+
+.statGrid{display:grid; grid-template-columns:1fr 1fr; gap:1px; background:var(--line-soft); border-radius:var(--r); overflow:hidden}
+.statCell{background:var(--surface); padding:12px 14px}
+.statCell .k{font-size:11px; letter-spacing:.06em; text-transform:uppercase; color:var(--muted); font-weight:600}
+.statCell .v{font-family:var(--f-num); font-size:18px; font-weight:600; font-variant-numeric:tabular-nums; margin-top:3px}
+
+.bars{display:flex; flex-direction:column; gap:12px; padding:14px}
+.barTop{display:flex; justify-content:space-between; gap:10px; font-size:13px; align-items:baseline}
+.barTop span:last-child{font-family:var(--f-num); font-variant-numeric:tabular-nums; color:var(--muted); font-size:12px}
+.track{height:7px; border-radius:99px; background:var(--surface-2); margin-top:6px; overflow:hidden}
+.fill{height:100%; border-radius:99px; background:var(--accent)}
+.fill.over{background:var(--neg)} .fill.warn{background:var(--warn)}
+.note{font-size:12px; color:var(--muted); margin-top:4px}
+.note.over{color:var(--neg); font-weight:600}
+
+.miniBtn{font-size:13px; font-weight:600; min-height:40px; padding:9px 13px; border-radius:9px; border:1px solid var(--line); color:var(--ink)}
+.miniBtn.solid{background:var(--accent); color:var(--accent-ink); border-color:transparent}
+
+.fieldset{display:flex; flex-direction:column; gap:12px; padding:14px}
+label.f{display:flex; flex-direction:column; gap:6px; font-size:12px; font-weight:600; color:var(--muted); letter-spacing:.03em}
+input.inp,textarea.inp{background:var(--bg); border:1px solid var(--line); border-radius:10px; padding:12px; font-size:16px; font-weight:400; color:var(--ink); width:100%}
+input.amount{font-family:var(--f-num); font-size:32px; font-weight:600; padding:14px 12px; letter-spacing:-.01em}
+.chips{display:flex; flex-wrap:wrap; gap:7px}
+.chip{min-height:40px; padding:10px 13px; border-radius:10px; background:var(--chip); font-size:13px; font-weight:500; border:1px solid transparent; display:flex; align-items:center; gap:6px}
+.chip[aria-pressed="true"]{border-color:var(--accent); background:var(--surface); font-weight:600}
+.rowBtns{display:flex; gap:9px}
+.sheet .rowBtns{position:sticky; bottom:0; z-index:2; background:var(--surface); padding:10px 0 4px; margin-top:2px}
+.btn{flex:1; min-height:50px; padding:14px; border-radius:12px; font-weight:700; font-size:15px; background:var(--accent); color:var(--accent-ink); text-align:center}
+.btn.ghost{background:var(--surface-2); color:var(--ink)}
+.btn.danger{background:transparent; color:var(--neg); border:1px solid var(--line)}
+.linkBtn{color:var(--accent); font-weight:600; font-size:14px; min-height:44px; padding:10px 0; text-align:left}
+
+.scrim{position:fixed; inset:0; background:rgba(8,16,14,.5); display:flex; align-items:flex-end; justify-content:center; z-index:40}
+.sheet{width:100%; max-width:560px; background:var(--surface); border-radius:18px 18px 0 0; max-height:92%; min-height:52vh; overflow-y:auto; padding-bottom:calc(14px + env(safe-area-inset-bottom, 0px)); animation:rise .2s ease-out}
+@keyframes rise{from{transform:translateY(16px); opacity:.6} to{transform:none; opacity:1}}
+@media (prefers-reduced-motion:reduce){.sheet{animation:none}}
+.sheetHead{display:flex; align-items:center; justify-content:space-between; gap:10px; padding:14px 16px 6px; position:sticky; top:0; background:var(--surface); z-index:1}
+.sheetHead h3{margin:0; font-family:var(--f-display); font-size:19px; font-weight:700}
+.x{font-size:20px; line-height:1; color:var(--muted); min-width:44px; min-height:44px; display:grid; place-items:center; border-radius:12px; background:var(--surface-2)}
+.toast{position:fixed; left:50%; transform:translateX(-50%); bottom:74px; z-index:60; background:var(--ink); color:var(--bg); padding:9px 14px; border-radius:11px; font-size:13px; font-weight:600; box-shadow:var(--shadow); max-width:88%; text-align:center}
+.csvBox{width:100%; min-height:150px; font-family:var(--f-num); font-size:11px; background:var(--bg); border:1px solid var(--line); border-radius:10px; padding:10px}
+.hint{font-size:12px; color:var(--muted); line-height:1.5}
+.setRow{display:flex; align-items:center; gap:10px; min-height:56px; padding:11px 14px; border-bottom:1px solid var(--line-soft)}
+.setRow:last-child{border-bottom:none}
+.setRow .lbl{flex:1; font-weight:500}
+.setRow input.inp{max-width:130px; text-align:right; font-family:var(--f-num)}
+.searchRow{display:flex; flex-direction:column; gap:9px; position:sticky; top:0; z-index:5; background:var(--bg); padding-bottom:8px; margin:-4px -16px 0; padding-left:16px; padding-right:16px; padding-top:4px}
+.chips.scroll{flex-wrap:nowrap; overflow-x:auto; -webkit-overflow-scrolling:touch; scrollbar-width:none; padding-bottom:2px}
+.chips.scroll::-webkit-scrollbar{display:none}
+.chips.scroll .chip{flex:none; white-space:nowrap}
+
+.lock{position:fixed; inset:0; z-index:90; background:var(--bg); display:flex; flex-direction:column; align-items:center; justify-content:center; gap:18px; padding:24px}
+.lock h1{font-family:var(--f-display); font-size:22px; font-weight:800; margin:0}
+.dots{display:flex; gap:12px}
+.dots i{width:13px; height:13px; border-radius:50%; border:2px solid var(--muted); display:block}
+.dots i.on{background:var(--accent); border-color:var(--accent)}
+.keypad{display:grid; grid-template-columns:repeat(3,72px); gap:12px}
+.keypad button{height:62px; border-radius:16px; background:var(--surface); border:1px solid var(--line-soft); font-family:var(--f-num); font-size:22px; font-weight:600; box-shadow:var(--shadow)}
+.keypad button.flat{background:transparent; border:none; box-shadow:none; font-size:14px; font-family:var(--f-body); font-weight:600; color:var(--muted)}
+</style>
+
+<header class="top">
+  <div class="topRow">
+    <div>
+      <div class="eyebrow">Общий баланс</div>
+      <div class="total" id="totalBal">0,00<small>BYN</small></div>
+    </div>
+    <div class="topTools">
+      <div class="pill ok" id="syncPill"><i></i><span>синхронизировано</span></div>
+      <button class="eye" id="eyeBtn">скрыть суммы</button>
+    </div>
+  </div>
+</header>
+
+<main><div class="wrap" id="view"></div></main>
+
+<button class="fab" id="fab" aria-label="Добавить операцию">＋</button>
+
+<nav class="tabs" id="tabs">
+  <button data-tab="home" aria-current="true"><span class="ti">◍</span>Главная</button>
+  <button data-tab="hist"><span class="ti">≡</span>История</button>
+  <button data-tab="stat"><span class="ti">◔</span>Лимиты</button>
+  <button data-tab="debt"><span class="ti">◷</span>Долги</button>
+  <button data-tab="more"><span class="ti">•••</span>Ещё</button>
+</nav>
+
+<script src="config.js"></script>
+<script src="engine.js"></script>
+<script>
+"use strict";
+
+var CUR = "BYN";
+var DEFAULT_CONFIG = {
+  accounts: [
+    {id:"cash",  name:"Наличные",    icon:"💵", start:0},
+    {id:"card",  name:"Карта",       icon:"💳", start:0},
+    {id:"other", name:"Другой счёт", icon:"🏦", start:0}
+  ],
+  categories: [
+    {id:"food",  name:"Еда",         icon:"🍔"},
+    {id:"trans", name:"Транспорт",   icon:"🚕"},
+    {id:"home",  name:"Жильё",       icon:"🏠"},
+    {id:"fun",   name:"Развлечения", icon:"🎮"},
+    {id:"conn",  name:"Связь",       icon:"📱"},
+    {id:"heal",  name:"Здоровье",    icon:"🏋️"},
+    {id:"misc",  name:"Прочее",      icon:"📦"}
+  ],
+  incomeCats: [
+    {id:"salary", name:"Зарплата", icon:"💼"},
+    {id:"gift",   name:"Подарок",  icon:"🎁"},
+    {id:"other",  name:"Прочее",   icon:"📦"}
+  ],
+  people: ["А1","Саня Мотич","Паша"],
+  limits: {},
+  setupDone: false
+};
+
+var state = {config: clone(DEFAULT_CONFIG), months:{}, tomb:{}, cloud:false, sync:"ok", pendingIds:{}};
+var tab = "home", statPeriod = "month", hideAmounts = false;
+var search = "", histFilter = "all", showBroken = false;
+var DB = null, chain = Promise.resolve(), retryTimer = null;
+
+var LS_DATA = "wallet.byn.v1", LS_PEND = "wallet.byn.pending", LS_LOCK = "wallet.byn.lock", LS_PREF = "wallet.byn.pref";
+var pending = {months:{}, config:false};
+
+function clone(o){ return JSON.parse(JSON.stringify(o)); }
+function uid(){ return Date.now().toString(36)+Math.random().toString(36).slice(2,8); }
+function monthKey(ts){ var d=new Date(ts); return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0"); }
+function money(n){ if(hideAmounts) return "••••"; var s=Math.abs(n).toFixed(2).replace(".",","); return (n<0?"−":"")+s; }
+function fmt(n){ return money(n)+" "+CUR; }
+function esc(s){ return String(s==null?"":s).replace(/[&<>"']/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];}); }
+/* Строгий разбор суммы операции. Ничего не спасает и не выпрямляет:
+   либо введено корректное положительное число с точностью до копейки,
+   либо NaN и человек правит ввод сам. Минус не превращается в плюс,
+   лишние знаки не округляются. */
+function parseAmt(v){
+  var s = String(v==null?"":v).trim().replace(/\s/g,"").replace(/,/g,".");
+  if(!/^\d+(\.\d{1,2})?$/.test(s)) return NaN;
+  var n = Number(s);
+  if(!isFinite(n) || n < 0.01) return NaN;
+  return Math.round(n*100)/100;
+}
+/* Разбор неотрицательной суммы для настроек: остатки и лимиты.
+   Пустое поле это ноль, всё остальное по тем же правилам. */
+function parseNonNeg(v){
+  var s = String(v==null?"":v).trim().replace(/\s/g,"").replace(/,/g,".");
+  if(s==="") return 0;
+  if(!/^\d+(\.\d{1,2})?$/.test(s)) return NaN;
+  var n = Number(s);
+  return isFinite(n)? Math.round(n*100)/100 : NaN;
+}
+function ops(){ return FIN.flatten(state.months); }
+/* Разбор всех стартовых остатков сразу: либо корректны все, либо
+   не применяется ни один. Иначе при ошибке во втором поле первое уже
+   было бы записано. */
+function parseStarts(raw){
+  var out = [];
+  for(var i=0;i<(raw||[]).length;i++){
+    var n = parseNonNeg(raw[i]);
+    if(!isFinite(n)) return {ok:false, index:i};
+    out.push(n);
+  }
+  return {ok:true, values:out};
+}
+
+/* Только рабочие операции: то же правило, по которому считает ядро.
+   Интерфейс не должен показывать как обычную запись то, что не влияет
+   ни на баланс, ни на статистику. */
+function validOps(){
+  var all = ops(), bad = FIN.rejectedIds(all, state.config);
+  return all.filter(function(o){ return !bad[o.id]; });
+}
+function brokenOps(){
+  var all = ops(), bad = FIN.rejectedIds(all, state.config);
+  return all.filter(function(o){ return bad[o.id]; });
+}
+/* Приведение конфига к ожидаемой форме: после восстановления из копии или
+   чтения чужого документа структура может оказаться какой угодно. */
+function safeConfig(c){
+  var d = clone(DEFAULT_CONFIG);
+  if(!c || typeof c!=="object") return d;
+  function list(v, fallback){
+    if(!Array.isArray(v)) return fallback;
+    return v.filter(function(x){ return x && typeof x==="object" && typeof x.id==="string" && x.id; })
+            .map(function(x){ return {id:x.id, name:String(x.name==null?x.id:x.name), icon:String(x.icon==null?"•":x.icon)}; });
+  }
+  var accs = Array.isArray(c.accounts)
+    ? c.accounts.filter(function(a){ return a && typeof a==="object" && typeof a.id==="string" && a.id; })
+        .map(function(a){ var n=Number(a.start); return {
+          id:a.id, name:String(a.name==null?a.id:a.name), icon:String(a.icon==null?"•":a.icon),
+          start: isFinite(n)&&n>0? Math.round(n*100)/100 : 0 }; })
+    : [];
+  var cats = list(c.categories, d.categories);
+  var inc  = list(c.incomeCats, d.incomeCats);
+  var cfg = {
+    accounts: accs.length? accs : d.accounts,
+    categories: cats.length? cats : d.categories,
+    incomeCats: inc.length? inc : d.incomeCats,
+    people: Array.isArray(c.people)
+      ? c.people.filter(function(p){ return typeof p==="string" && p.trim(); }).map(function(p){ return p.trim(); })
+      : d.people,
+    limits: {},
+    setupDone: !!c.setupDone,
+    upd: isFinite(Number(c.upd))? Number(c.upd) : 0
+  };
+  if(c.limits && typeof c.limits==="object" && !Array.isArray(c.limits)){
+    Object.keys(c.limits).forEach(function(k){
+      var n = Number(c.limits[k]);
+      if(isFinite(n) && n>0) cfg.limits[k] = Math.round(n*100)/100;
+    });
+  }
+  return cfg;
+}
+
+/* ---------- слияние месяцев ----------
+   Документ месяца это не просто массив: рядом лежит список надгробий,
+   то есть id удалённых операций с временем удаления. Без них удалённая
+   на одном устройстве запись возвращалась бы со второго при первой же
+   синхронизации.
+
+   Правила слияния, одинаковые на всех устройствах, поэтому результат
+   сходится независимо от порядка:
+   1. операции объединяются по id, а не заменяются целым массивом;
+   2. при конфликте одной и той же операции побеждает та, у которой
+      больше upd, время последней правки; при равенстве берётся
+      лексикографически больший JSON, просто чтобы выбор был
+      детерминированным, а не случайным;
+   3. надгробие побеждает операцию, если оно НЕ СТАРШЕ её последней
+      правки: операция видна, только когда upd строго больше времени
+      удаления. Правило симметричное правилу 2, то есть по элементу тоже
+      побеждает последний по времени. Простое надгробие сильнее всего
+      работать не может: удаление нечем было бы отменить, и
+      восстановление из копии не смогло бы вернуть запись, потому что
+      надгробие пришло бы обратно с сервера при первом же слиянии.
+   Надгробия НЕ протухают. Срок жизни у них был, и это была ошибка:
+   сама операция остаётся в серверном документе, и как только надгробие
+   исчезало, ближайшее слияние возвращало удалённую запись. Список id
+   растёт медленно и весит копейки, поэтому он бессрочный. */
+function mergeMonth(localItems, localTomb, serverItems, serverTomb){
+  var tomb = {};
+  [serverTomb||{}, localTomb||{}].forEach(function(src){
+    Object.keys(src).forEach(function(id){
+      var t = Number(src[id])||0;
+      if(t > (tomb[id]||0)) tomb[id] = t;
+    });
+  });
+
+  var by = {};
+  function put(o){
+    if(!o || typeof o!=="object" || !o.id) return;
+    var prev = by[o.id];
+    if(!prev){ by[o.id] = o; return; }
+    var a = Number(o.upd)||0, b = Number(prev.upd)||0;
+    if(a > b) by[o.id] = o;
+    else if(a === b && JSON.stringify(o) > JSON.stringify(prev)) by[o.id] = o;
+  }
+  (serverItems||[]).forEach(put);
+  (localItems||[]).forEach(put);
+
+  var items = Object.keys(by).filter(function(id){
+    if(tomb[id]==null) return true;
+    return (Number(by[id].upd)||0) > Number(tomb[id]);   // вернуть можно только более поздней правкой
+  }).map(function(id){ return by[id]; });
+  items.sort(function(x,y){ return x.ts<y.ts? -1 : x.ts>y.ts? 1 : (x.id<y.id? -1:1); });
+  return {items:items, tomb:tomb};
+}
+/* Устойчивое представление объекта: ключи по алфавиту, поэтому строка
+   не зависит от порядка полей и её можно сравнивать между устройствами. */
+function stableStr(v){
+  if(v===null || typeof v!=="object") return JSON.stringify(v);
+  if(Array.isArray(v)) return "["+v.map(stableStr).join(",")+"]";
+  return "{"+Object.keys(v).sort().map(function(k){ return JSON.stringify(k)+":"+stableStr(v[k]); }).join(",")+"}";
+}
+/* Кто побеждает при расхождении настроек: сначала более поздняя правка,
+   при равном времени лексикографически больший устойчивый снимок.
+   Случайного исхода быть не должно: оба устройства обязаны выбрать одно
+   и то же, иначе они будут вечно переписывать друг друга. */
+function pickConfig(local, server){
+  if(!server) return {cfg:local, changed:false};
+  var a = Number(local && local.upd)||0, b = Number(server.upd)||0;
+  if(b > a) return {cfg:server, changed:true};
+  if(a > b) return {cfg:local, changed:false};
+  var sl = stableStr(local), ss = stableStr(server);
+  if(sl === ss) return {cfg:local, changed:false};
+  return ss > sl ? {cfg:server, changed:true} : {cfg:local, changed:false};
+}
+/* Отпечаток набора: по нему видно, отличается ли наш месяц от серверного. */
+function sigItems(items){
+  return (items||[]).map(function(o){ return (o&&o.id)+":"+(Number(o&&o.upd)||0); }).sort().join("|");
+}
+function sigTomb(t){
+  return Object.keys(t||{}).sort().map(function(k){ return k+":"+(Number(t[k])||0); }).join("|");
+}
+
+/* Что делать с надгробиями при восстановлении из копии.
+   Два правила, оба обязательны:
+   1. операция, которая есть в копии, не должна быть заблокирована старым
+      надгробием, иначе восстановленная запись тут же исчезнет;
+   2. операция, которая была локально, но в копии отсутствует, должна
+      получить надгробие, иначе она вернётся с другого устройства. */
+function planRestore(oldMonths, oldTomb, newMonths, now){
+  var keep = {};
+  Object.keys(newMonths||{}).forEach(function(k){
+    (newMonths[k]||[]).forEach(function(o){ if(o && o.id) keep[o.id] = true; });
+  });
+  var tomb = {};
+  Object.keys(oldTomb||{}).forEach(function(k){
+    tomb[k] = {};
+    Object.keys(oldTomb[k]||{}).forEach(function(id){
+      if(!keep[id]) tomb[k][id] = oldTomb[k][id];   // правило 1: восстановленное разблокируем
+    });
+  });
+  Object.keys(oldMonths||{}).forEach(function(k){
+    (oldMonths[k]||[]).forEach(function(o){
+      if(!o || !o.id || keep[o.id]) return;
+      if(!tomb[k]) tomb[k] = {};
+      tomb[k][o.id] = now;                          // правило 2: выпавшее хороним
+    });
+  });
+  Object.keys(newMonths||{}).forEach(function(k){ if(!tomb[k]) tomb[k] = {}; });
+  return tomb;
+}
+
+/* ---------- локальное хранилище ---------- */
+function lsGet(k){ try{ var v=localStorage.getItem(k); return v?JSON.parse(v):null; }catch(e){ return null; } }
+function lsSet(k,v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){} }
+
+function loadCache(){
+  var d = lsGet(LS_DATA);
+  if(d){
+    if(d.config) state.config = safeConfig(d.config);
+    if(d.months) state.months = d.months;
+    if(d.tomb && typeof d.tomb==="object") state.tomb = d.tomb;
+  }
+  var p = lsGet(LS_PEND); if(p && p.months) pending = p;
+  var pref = lsGet(LS_PREF); if(pref){ hideAmounts = !!pref.hide; }
+  recountPending();
+}
+function saveCache(){ lsSet(LS_DATA, {config:state.config, months:state.months, tomb:state.tomb}); }
+function savePending(){ lsSet(LS_PEND, pending); recountPending(); }
+function recountPending(){
+  state.pendingIds = {};
+  Object.keys(pending.months||{}).forEach(function(k){
+    (state.months[k]||[]).forEach(function(o){ state.pendingIds[o.id]=true; });
+  });
+}
+function pendingCount(){ return Object.keys(pending.months||{}).length + (pending.config?1:0); }
+
+/* ---------- синхронизация ---------- */
+function setSync(s){ state.sync = s; paintSync(); }
+function paintSync(){
+  var el = document.getElementById("syncPill");
+  var n = pendingCount();
+  var cls = "pill ok", txt = "синхронизировано";
+  if(!state.cloud){ cls="pill wait"; txt = n? "ждёт отправки: "+n : "только это устройство"; }
+  else if(state.sync==="err"){ cls="pill err"; txt="ошибка синхронизации"; }
+  else if(n>0){ cls="pill wait"; txt="ждёт отправки: "+n; }
+  el.className = cls;
+  el.querySelector("span").textContent = txt;
+}
+function markMonth(key){ pending.months[key]=true; savePending(); saveCache(); flush(); paintSync(); }
+function markConfig(){ state.config.upd = Date.now(); pending.config=true; savePending(); saveCache(); flush(); paintSync(); }
+
+function flush(){
+  if(!DB) { paintSync(); return; }
+  chain = chain.then(async function(){
+    var keys = Object.keys(pending.months||{});
+    var failed = false;
+    for(var i=0;i<keys.length;i++){
+      var k = keys[i];
+      try{
+        var done = await writeMonth(k);
+        if(done){ delete pending.months[k]; savePending(); saveCache(); }
+        else failed = true;
+      }catch(e){ failed = true; }
+    }
+    if(pending.config){
+      try{
+        var okCfg = await writeConfig();
+        if(okCfg){ pending.config=false; savePending(); saveCache(); }
+        else failed = true;
+      }catch(e){ failed = true; }
+    }
+    setSync(failed? "err" : "ok");
+    if(failed) scheduleRetry(); else if(retryTimer){ clearInterval(retryTimer); retryTimer=null; }
+    render();
+  }).catch(function(){ setSync("err"); scheduleRetry(); });
+  return chain;
+}
+/* Запись месяца: прочитать, слить, записать, ПРОВЕРИТЬ.
+   Транзакций в базе нет, записи по документу last write wins, поэтому
+   между нашим чтением и нашей записью может вклиниться другое устройство
+   и наш set затрёт его операцию. Защита строится на проверке: сразу
+   после записи документ читается обратно, и если на сервере лежит не то,
+   что мы записали, значит кто-то вклинился. Тогда цикл повторяется и его
+   данные вливаются в наши. Три попытки, дальше месяц остаётся в очереди
+   и уедет при следующей синхронизации.
+   Кооперативная аренда документа в API есть (acquire), но она пишет в тот
+   же документ, который мы целиком заменяем, поэтому здесь не используется. */
+async function writeMonth(k){
+  var ref = DB.doc("months/"+k);
+  for(var attempt=0; attempt<3; attempt++){
+    var snap = await ref.get();
+    var sv = snap.exists? (snap.data()||{}) : {};
+    var m = mergeMonth(state.months[k], state.tomb[k], sv.items, sv.deleted);
+    state.months[k] = m.items; state.tomb[k] = m.tomb;
+    var wr = await ref.set({items: m.items, deleted: m.tomb}, snap.version);
+    if(wr && wr.conflict) continue;              // версия устарела, читаем заново и сливаем ещё раз
+
+    var after = await ref.get();
+    var av = after.exists? (after.data()||{}) : {};
+    if(sigItems(av.items||[])===sigItems(m.items) && sigTomb(av.deleted||{})===sigTomb(m.tomb)) return true;
+    /* На сервере не наша версия: кто-то записал следом. Его данные
+       подтянутся следующим get и сольются с нашими. */
+  }
+  return false;
+}
+/* Запись настроек: та же схема, что и у месяца.
+   Прочитать, выбрать победителя по одному правилу pickConfig, записать,
+   перечитать и убедиться, что на сервере лежит именно наша версия.
+   Сравнение через stableStr, чтобы порядок ключей не влиял. */
+async function writeConfig(){
+  var ref = DB.doc("config/main");
+  /* Приводим свою копию к той же форме, в какой она вернётся с сервера,
+     иначе сравнение после записи не сойдётся из-за лишних полей. */
+  state.config = safeConfig(state.config);
+  for(var attempt=0; attempt<3; attempt++){
+    var snap = await ref.get();
+    var sc = snap.exists? safeConfig(snap.data()) : null;
+    var pick = pickConfig(state.config, sc);
+    state.config = pick.cfg;
+    var wr = await ref.set(state.config, snap.version);
+    if(wr && wr.conflict) continue;              // версия устарела, читаем заново и выбираем ещё раз
+
+    var after = await ref.get();
+    var av = after.exists? safeConfig(after.data()) : null;
+    if(av && stableStr(av) === stableStr(state.config)) return true;
+    /* На сервере не наша версия: кто-то записал следом, его данные
+       попадут в следующий get и пройдут через то же правило выбора. */
+  }
+  return false;
+}
+function scheduleRetry(){
+  if(retryTimer) return;
+  retryTimer = setInterval(function(){ if(pendingCount()===0){ clearInterval(retryTimer); retryTimer=null; return; } flush(); }, 20000);
+}
+
+/* ---------- Supabase ----------
+   Весь код синхронизации выше работает с объектом, у которого есть
+   doc(path).get/set/onSnapshot и collection(name).onSnapshot. База
+   артефакта даёт такой объект сама. Здесь ровно такой же объект
+   собирается поверх Supabase, поэтому writeMonth, writeConfig, слияние
+   и надгробия остаются нетронутыми: меняется только то, куда они пишут.
+
+   Одна таблица wallet_docs: строка это документ, путь плюс jsonb.
+   Разделение по пользователям делает сам Supabase через RLS. */
+var SUPA = null, SUPA_USER = null, POLL_MS = 15000;
+
+function supaConfigured(){
+  return !!(window.WALLET_SUPABASE && window.WALLET_SUPABASE.url && window.WALLET_SUPABASE.anonKey);
+}
+function loadScript(src){
+  return new Promise(function(res, rej){
+    var el = document.createElement("script");
+    el.src = src; el.onload = res; el.onerror = function(){ rej(new Error("не загрузился "+src)); };
+    document.head.appendChild(el);
+  });
+}
+async function supaClient(){
+  if(SUPA) return SUPA;
+  if(!supaConfigured()) return null;
+  /* Сначала копия из репозитория: она лежит в кеше service worker, поэтому
+     приложение поднимается с синхронизацией даже при плохой связи. Сеть
+     остаётся запасным путём на случай, если файла рядом нет. */
+  if(!window.supabase){
+    try{ await loadScript("vendor/supabase.js"); }catch(e){}
+  }
+  if(!window.supabase){
+    try{ await loadScript("https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"); }
+    catch(e){ return null; }                    // ни файла, ни сети: работаем локально
+  }
+  if(!window.supabase || !window.supabase.createClient) return null;
+  SUPA = window.supabase.createClient(window.WALLET_SUPABASE.url, window.WALLET_SUPABASE.anonKey, {
+    auth: {persistSession:true, autoRefreshToken:true}
+  });
+  return SUPA;
+}
+
+/* Обёртка, повторяющая интерфейс базы артефакта. */
+function supaDb(client, uid){
+  var TABLE = "wallet_docs";
+  function snapOf(row){
+    var body = row? row.data : null;
+    return {
+      exists: body!=null,
+      data: function(){ return body==null? undefined : body; },
+      version: row? (Number(row.version)||0) : 0
+    };
+  }
+  function docRef(path){
+    return {
+      get: async function(){
+        var r = await client.from(TABLE).select("data,version").eq("user_id", uid).eq("path", path).maybeSingle();
+        if(r.error) throw r.error;
+        return snapOf(r.data);
+      },
+      /* Запись только если версия на сервере та же, что мы прочитали.
+         Ноль изменённых строк означает, что между нашим чтением и записью
+         кто-то успел записать своё: это конфликт, а не ошибка. Вызывающий
+         перечитает документ, повторит СВОЁ слияние и запишет снова.
+         Правила слияния остаются в JS, в базе их нет. */
+      set: async function(body, expected){
+        var now = new Date().toISOString();
+        var v = Number(expected)||0;
+        if(v === 0){
+          var ins = await client.from(TABLE)
+            .insert({user_id: uid, path: path, data: body, version: 1, updated_at: now})
+            .select("version");
+          if(ins.error){
+            if(String(ins.error.code) === "23505") return {conflict:true};  // строку успели создать
+            throw ins.error;
+          }
+          return {conflict: !(ins.data && ins.data.length)};
+        }
+        var up = await client.from(TABLE)
+          .update({data: body, version: v+1, updated_at: now})
+          .eq("user_id", uid).eq("path", path).eq("version", v)
+          .select("version");
+        if(up.error) throw up.error;
+        return {conflict: !(up.data && up.data.length)};
+      },
+      /* Подписки у Supabase есть, но опрос раз в пятнадцать секунд плюс
+         опрос при возврате в приложение проще, дешевле и не ломается
+         на плохой связи. Для личного кошелька этого достаточно. */
+      onSnapshot: function(next, err){
+        var stopped = false, last = null;
+        async function tick(){
+          if(stopped) return;
+          try{
+            var snap = await docRef(path).get();
+            var sig = JSON.stringify(snap.exists? snap.data() : null);
+            if(sig !== last){ last = sig; next(snap); }
+          }catch(e){ if(err) err(e); }
+        }
+        tick();
+        var t = setInterval(tick, POLL_MS);
+        document.addEventListener("visibilitychange", tick);
+        /* Слушателя надо снимать вместе с таймером: после входа boot()
+           запускается снова, и без этого подписки копились бы. */
+        return function(){ stopped = true; clearInterval(t); document.removeEventListener("visibilitychange", tick); };
+      }
+    };
+  }
+  return {
+    doc: docRef,
+    collection: function(name){
+      return {
+        onSnapshot: function(next, err){
+          var stopped = false, last = null;
+          async function tick(){
+            if(stopped) return;
+            try{
+              var r = await client.from(TABLE).select("path,data").eq("user_id", uid).like("path", name+"/%");
+              if(r.error) throw r.error;
+              var docs = (r.data||[]).map(function(row){
+                return {id: String(row.path).slice(name.length+1), data: function(){ return row.data; }};
+              });
+              var sig = JSON.stringify(docs.map(function(d){ return [d.id, d.data()]; }));
+              if(sig !== last){ last = sig; next({docs: docs}); }
+            }catch(e){ if(err) err(e); }
+          }
+          tick();
+          var t = setInterval(tick, POLL_MS);
+          document.addEventListener("visibilitychange", tick);
+          return function(){ stopped = true; clearInterval(t); document.removeEventListener("visibilitychange", tick); };
+        }
+      };
+    }
+  };
+}
+
+async function boot(){
+  loadCache();
+  render(); paintSync();
+  applyLock();
+  handleHash();
+  var db = null;
+  if(supaConfigured()){
+    db = await supaStart();                     // своя база, вход по почте
+  } else {
+    try{ db = await (window.claude && window.claude.use ? window.claude.use("db") : null); }catch(e){ db = null; }
+  }
+  if(!db){ paintSync(); return; }
+  DB = db; state.cloud = true; paintSync();
+  try{
+    db.doc("config/main").onSnapshot(function(s){
+      if(!s.exists) return;
+      var sc = safeConfig(s.data());
+      /* Единственное правило разрешения конфликта во всей программе. */
+      var pick = pickConfig(state.config, sc);
+      if(pick.changed){
+        state.config = pick.cfg; pending.config = false; savePending(); saveCache(); render();
+      } else if(stableStr(sc) !== stableStr(state.config)){
+        /* Наша версия побеждает: досылаем её, а не подхватываем чужую. */
+        pending.config = true; savePending(); flush();
+      }
+    }, function(){ setSync("err"); });
+    db.collection("months").onSnapshot(function(q){
+      var needFlush = false;
+      q.docs.forEach(function(d){
+        var v = d.data()||{};
+        var svItems = Array.isArray(v.items)? v.items : [];
+        var svTomb = (v.deleted && typeof v.deleted==="object")? v.deleted : {};
+        var m = mergeMonth(state.months[d.id], state.tomb[d.id], svItems, svTomb);
+        state.months[d.id] = m.items; state.tomb[d.id] = m.tomb;
+        /* Если после слияния у нас есть то, чего нет на сервере,
+           значит наше надо дослать. Так чинится и гонка двух устройств,
+           записавших месяц почти одновременно. */
+        if(sigItems(m.items)!==sigItems(svItems) || sigTomb(m.tomb)!==sigTomb(svTomb)){
+          pending.months[d.id] = true; needFlush = true;
+        }
+      });
+      savePending(); saveCache(); recountPending(); render();
+      if(needFlush) flush();
+    }, function(){ setSync("err"); });
+  }catch(e){}
+  flush();
+}
+
+window.addEventListener("online", function(){ flush(); });
+document.addEventListener("visibilitychange", function(){
+  if(document.visibilityState==="visible"){ maybeRelock(); flush(); }
+  else lastHidden = Date.now();
+});
+
+/* ---------- вход в свою базу ---------- */
+async function supaStart(){
+  var client = await supaClient();
+  if(!client) return null;                      // нет сети или ключей: локальный режим
+  var ses = null;
+  try{ ses = (await client.auth.getSession()).data.session; }catch(e){}
+  if(!ses){
+    showAuth(client);
+    return null;                                 // после входа страница перезапустит boot
+  }
+  SUPA_USER = ses.user;
+  return supaDb(client, ses.user.id);
+}
+function showAuth(client){
+  if(document.getElementById("authScreen")) return;
+  var el = document.createElement("div");
+  el.className = "lock"; el.id = "authScreen";
+  el.innerHTML = '<h1>Кошелёк BYN</h1>'+
+    '<div class="hint" style="max-width:320px; text-align:center">Вход нужен один раз на устройство. Дальше приложение открывается сразу, а данные синхронизируются между телефоном и компьютером.</div>'+
+    '<div style="width:100%; max-width:320px; display:flex; flex-direction:column; gap:10px">'+
+    '<input class="inp" id="authMail" type="email" inputmode="email" autocomplete="username" placeholder="почта">'+
+    '<input class="inp" id="authPass" type="password" autocomplete="current-password" placeholder="пароль">'+
+    '<button class="btn" id="authIn">Войти</button>'+
+    '<button class="btn ghost" id="authUp">Создать аккаунт</button>'+
+    '<div class="hint" id="authMsg" style="min-height:18px; text-align:center"></div>'+
+    '<button class="linkBtn" id="authSkip" style="text-align:center">Продолжить без входа, только на этом устройстве</button>'+
+    '</div>';
+  document.body.appendChild(el);
+  var msg = el.querySelector("#authMsg");
+  function creds(){ return {email: el.querySelector("#authMail").value.trim(), password: el.querySelector("#authPass").value}; }
+  async function done(r, upMode){
+    if(r.error){ msg.textContent = r.error.message || "Не получилось"; return; }
+    if(upMode && !(r.data && r.data.session)){ msg.textContent = "Аккаунт создан. Подтверди почту по ссылке из письма и войди."; return; }
+    el.remove(); boot();
+  }
+  el.querySelector("#authIn").addEventListener("click", async function(){
+    var c = creds(); if(!c.email || !c.password){ msg.textContent = "Заполни почту и пароль"; return; }
+    msg.textContent = "Проверяю...";
+    done(await client.auth.signInWithPassword(c), false);
+  });
+  el.querySelector("#authUp").addEventListener("click", async function(){
+    var c = creds(); if(!c.email || c.password.length < 6){ msg.textContent = "Пароль от шести символов"; return; }
+    msg.textContent = "Создаю...";
+    done(await client.auth.signUp(c), true);
+  });
+  el.querySelector("#authSkip").addEventListener("click", function(){ el.remove(); paintSync(); });
+}
+async function supaSignOut(){
+  var client = await supaClient();
+  if(client) await client.auth.signOut();
+  SUPA_USER = null; DB = null; state.cloud = false;
+  render(); paintSync();
+  showAuth(client);
+}
+
+/* ---------- операции ---------- */
+function addOp(op){
+  var key = monthKey(op.ts);
+  op.upd = Date.now();                              // для слияния между устройствами
+  state.months[key] = FIN.dedupe((state.months[key]||[]).concat([op]));
+  markMonth(key); render();
+}
+function findOp(id){
+  var keys = Object.keys(state.months);
+  for(var i=0;i<keys.length;i++){
+    var arr = state.months[keys[i]]||[];
+    for(var j=0;j<arr.length;j++) if(arr[j].id===id) return {key:keys[i], idx:j, op:arr[j]};
+  }
+  return null;
+}
+function saveOp(id, patch){
+  var f = findOp(id); if(!f) return;
+  var arr = state.months[f.key].slice();
+  arr[f.idx] = Object.assign({}, f.op, patch, {upd: Date.now()});
+  state.months[f.key] = arr;
+  markMonth(f.key); render();
+}
+function removeOp(id){
+  var f = findOp(id); if(!f) return;
+  state.months[f.key] = state.months[f.key].filter(function(o){ return o.id!==id; });
+  if(!state.tomb[f.key]) state.tomb[f.key] = {};
+  state.tomb[f.key][id] = Date.now();               // чтобы запись не воскресла с другого устройства
+  markMonth(f.key); render();
+}
+
+/* ---------- замок ---------- */
+var lastHidden = 0, lockEl = null;
+async function sha(text){
+  var buf = new TextEncoder().encode(text);
+  var h = await crypto.subtle.digest("SHA-256", buf);
+  return Array.from(new Uint8Array(h)).map(function(b){return b.toString(16).padStart(2,"0");}).join("");
+}
+function lockCfg(){ return lsGet(LS_LOCK); }
+function applyLock(){ if(lockCfg()) showLock(); }
+function maybeRelock(){ if(lockCfg() && lastHidden && Date.now()-lastHidden > 90000) showLock(); }
+function showLock(){
+  if(lockEl) return;
+  var el = document.createElement("div");
+  el.className = "lock";
+  el.innerHTML = '<h1>Кошелёк заперт</h1><div class="hint">Введи код доступа</div>'+
+    '<div class="dots" id="dots"><i></i><i></i><i></i><i></i></div>'+
+    '<div class="keypad" id="kp">'+[1,2,3,4,5,6,7,8,9].map(function(n){return '<button data-k="'+n+'">'+n+'</button>';}).join("")+
+    '<button class="flat" data-k="clear">Сброс</button><button data-k="0">0</button><button class="flat" data-k="del">Стереть</button></div>';
+  document.body.appendChild(el); lockEl = el;
+  var code = "";
+  function paint(){
+    el.querySelectorAll("#dots i").forEach(function(d,i){ d.className = i<code.length? "on":""; });
+  }
+  el.querySelector("#kp").addEventListener("click", async function(e){
+    var b = e.target.closest("button[data-k]"); if(!b) return;
+    var k = b.dataset.k;
+    if(k==="clear") code="";
+    else if(k==="del") code = code.slice(0,-1);
+    else if(code.length<4) code += k;
+    paint();
+    if(code.length===4){
+      var cfg = lockCfg();
+      var h = await sha(cfg.salt + code);
+      if(h===cfg.hash){ el.remove(); lockEl=null; }
+      else { code=""; paint(); el.querySelector(".hint").textContent = "Неверный код, попробуй ещё"; }
+    }
+  });
+}
+
+/* ---------- рендер ---------- */
+var view = document.getElementById("view");
+
+function render(){
+  document.getElementById("totalBal").innerHTML = esc(money(FIN.totalBalance(state.config, ops())))+'<small>'+CUR+'</small>';
+  document.getElementById("eyeBtn").textContent = hideAmounts? "показать суммы":"скрыть суммы";
+  var btns = document.querySelectorAll("#tabs button");
+  for(var i=0;i<btns.length;i++) btns[i].setAttribute("aria-current", String(btns[i].dataset.tab===tab));
+  paintSync();
+  /* На главной крупные кнопки уже на экране, круглая кнопка там только
+     перекрывала бы суммы в списке. На остальных вкладках она нужна. */
+  var fab = document.getElementById("fab");
+  if(fab) fab.hidden = (tab==="home");
+  if(tab==="home") renderHome();
+  else if(tab==="hist") renderHist();
+  else if(tab==="stat") renderStat();
+  else if(tab==="debt") renderDebt();
+  else renderMore();
+}
+
+function accIcon(id){ var a=state.config.accounts.filter(function(x){return x.id===id;})[0]; return a?a.icon:"•"; }
+function catObj(id, income){
+  var list = income? state.config.incomeCats : state.config.categories;
+  return list.filter(function(c){return c.id===id;})[0] || {id:id, name:id||"Без категории", icon:"•"};
+}
+
+function renderHome(){
+  var last = validOps().slice(0,6), h = "";
+  if(!state.config.setupDone){
+    h += '<div class="card" style="padding:14px">'+
+      '<div style="font-family:var(--f-display); font-weight:700; font-size:17px">Начни с остатков</div>'+
+      '<div class="hint" style="margin:6px 0 12px">Впиши, сколько денег сейчас на каждом счёте. Дальше баланс считается сам, от каждой операции.</div>'+
+      '<button class="btn" data-act="setup">Указать остатки</button></div>';
+  }
+  h += '<div class="sect"><h2 class="sh">Счета</h2><div class="card">';
+  state.config.accounts.forEach(function(a){
+    h += '<div class="accRow"><div class="accIco">'+esc(a.icon)+'</div><div class="accName">'+esc(a.name)+'</div>'+
+         '<div class="accVal">'+esc(fmt(FIN.accountBalance(state.config, ops(), a.id)))+'</div></div>';
+  });
+  h += '</div></div>';
+  /* Доходы и расходы за текущий месяц, компактной парой. */
+  var mFrom = new Date(new Date().getFullYear(), new Date().getMonth(), 1).getTime();
+  var mst = FIN.periodStats(ops(), mFrom, state.config);
+  h += '<div class="sect"><h2 class="sh">Этот месяц</h2><div class="sum2">'+
+    '<div><div class="k">Доходы</div><div class="v" style="color:var(--pos)">'+esc(money(mst.income))+'</div></div>'+
+    '<div><div class="k">Расходы</div><div class="v" style="color:var(--neg)">'+esc(money(mst.expense))+'</div></div></div></div>';
+  h += '<button class="btn" data-act="expense" style="font-size:16px; min-height:56px">− Записать расход</button>';
+  h += '<div class="actions">'+
+    '<button class="act" data-act="income"><b>＋</b>Доход</button>'+
+    '<button class="act" data-act="transfer"><b>⇄</b>Перевод</button>'+
+    '<button class="act" data-act="debt"><b>◷</b>Долг</button>'+
+    '<button class="act" data-act="repay"><b>✓</b>Возврат</button></div>';
+  h += '<div class="sect"><h2 class="sh">Последние операции</h2><div class="card">';
+  h += last.length? last.map(opRowHTML).join("") : '<div class="empty"><b>Пока пусто</b>Нажми Записать расход или плюс внизу справа.</div>';
+  h += '</div>';
+  if(last.length) h += '<button class="linkBtn" data-act="goHist">Вся история →</button>';
+  h += '</div>';
+  view.innerHTML = h;
+}
+
+function opMeta(o){
+  var a = Math.abs(Number(o.amount)||0), m = {ico:"•", title:"", sub:"", amt:"", cls:""};
+  if(o.type==="income"){ var c=catObj(o.category,true); m.ico=c.icon; m.title=c.name; m.cls="pos"; m.amt="+"+money(a); m.sub=accIcon(o.account)+" "+FIN.nameOfAccount(state.config,o.account); }
+  else if(o.type==="expense"){ var c2=catObj(o.category,false); m.ico=c2.icon; m.title=c2.name; m.cls="neg"; m.amt="−"+money(a); m.sub=accIcon(o.account)+" "+FIN.nameOfAccount(state.config,o.account); }
+  else if(o.type==="transfer"){ m.ico="⇄"; m.title="Перевод"; m.amt=money(a); m.sub=FIN.nameOfAccount(state.config,o.account)+" → "+FIN.nameOfAccount(state.config,o.toAccount); }
+  else if(o.type==="debt"){ m.ico="◷"; m.title="Новый долг"; m.amt=money(a); m.sub="Должен: "+(o.person||"—"); }
+  else if(o.type==="repay"){ m.ico="✓"; m.title="Погашение долга"; m.cls="neg"; m.amt="−"+money(a); m.sub=(o.person||"—")+" · "+FIN.nameOfAccount(state.config,o.account); }
+  if(o.note) m.sub += " · "+o.note;
+  return m;
+}
+function opRowHTML(o){
+  var m = opMeta(o), d = new Date(o.ts);
+  var hhmm = String(d.getHours()).padStart(2,"0")+":"+String(d.getMinutes()).padStart(2,"0");
+  var wait = state.pendingIds[o.id]? '<span class="unsynced">⏳</span>':'';
+  return '<button class="opRow" data-op="'+esc(o.id)+'"><div class="opIco">'+esc(m.ico)+'</div>'+
+    '<div class="opMid"><div class="opTitle">'+esc(m.title)+wait+'</div><div class="opSub">'+esc(hhmm+" · "+m.sub)+'</div></div>'+
+    '<div class="opAmt '+m.cls+'">'+esc(m.amt)+'</div></button>';
+}
+function dayLabel(ts){
+  var d=new Date(ts), n=new Date(), y=new Date(n.getTime()-864e5);
+  function same(x,z){ return x.getFullYear()===z.getFullYear()&&x.getMonth()===z.getMonth()&&x.getDate()===z.getDate(); }
+  if(same(d,n)) return "Сегодня";
+  if(same(d,y)) return "Вчера";
+  return d.toLocaleDateString("ru-RU",{day:"numeric",month:"long",year:d.getFullYear()!==n.getFullYear()?"numeric":undefined});
+}
+
+function matches(o){
+  if(histFilter!=="all"){
+    if(histFilter==="debts"){ if(o.type!=="debt" && o.type!=="repay") return false; }
+    else if(o.type!==histFilter) return false;
+  }
+  if(!search) return true;
+  var q = search.toLowerCase();
+  var m = opMeta(o);
+  var hay = [m.title, m.sub, o.note, o.person, FIN.nameOfAccount(state.config,o.account), FIN.nameOfAccount(state.config,o.toAccount), String(o.amount)].join(" ").toLowerCase();
+  return hay.indexOf(q)>=0;
+}
+
+function renderHist(){
+  var all = validOps(), list = all.filter(matches), broken = brokenOps();
+  var h = '<div class="searchRow">'+
+    '<input class="inp" id="q" type="search" enterkeyhint="search" placeholder="Поиск: комментарий, категория, человек" value="'+esc(search)+'">'+
+    '<div class="chips scroll" id="hf">'+
+      [["all","Все"],["expense","Расходы"],["income","Доходы"],["transfer","Переводы"],["debts","Долги"]].map(function(f){
+        return '<button class="chip" data-hf="'+f[0]+'" aria-pressed="'+String(histFilter===f[0])+'">'+f[1]+'</button>';
+      }).join("")+
+    '</div></div>';
+  if(!all.length){ view.innerHTML = h+'<div class="card empty"><b>История пуста</b>Здесь появятся все операции, самые свежие сверху.</div>'; wireSearch(); return; }
+  if(!list.length){ view.innerHTML = h+'<div class="card empty"><b>Ничего не найдено</b>Поменяй запрос или фильтр.</div>'; wireSearch(); return; }
+  var lastDay = "";
+  list.forEach(function(o){
+    var dk = new Date(o.ts).toDateString();
+    if(dk!==lastDay){ if(lastDay) h += '</div>'; h += '<div class="dayHead">'+esc(dayLabel(o.ts))+'</div><div class="card">'; lastDay = dk; }
+    h += opRowHTML(o);
+  });
+  h += '</div><div class="hint">Найдено операций: '+list.length+' из '+all.length+'. Нажми на любую, чтобы исправить или удалить.</div>';
+  if(broken.length){
+    h += '<div class="card" style="padding:14px"><div class="hint">Нерабочих записей: '+broken.length+
+         '. Они не влияют ни на баланс, ни на долги, ни на отчёт, потому что не проходят проверку: битая дата, сумма или счёт. '+
+         'Такое бывает только после ручной правки копии.</div>'+
+         '<button class="linkBtn" data-act="toggleBroken">'+(showBroken? "Скрыть их":"Показать их")+'</button>';
+    if(showBroken){
+      h += '<div style="margin-top:8px">'+broken.map(function(o){
+        var m = opMeta(o);
+        return '<button class="opRow" data-bad="'+esc(o.id)+'"><div class="opIco">⚠️</div>'+
+          '<div class="opMid"><div class="opTitle">'+esc(m.title||o.type)+'</div>'+
+          '<div class="opSub">'+esc("не учитывается · "+(m.sub||""))+'</div></div>'+
+          '<div class="opAmt">'+esc(String(o.amount))+'</div></button>';
+      }).join("")+'</div>';
+    }
+    h += '</div>';
+  }
+  view.innerHTML = h;
+  wireSearch();
+}
+function wireSearch(){
+  var q = document.getElementById("q");
+  if(!q) return;
+  q.addEventListener("input", function(){
+    search = q.value;
+    var pos = q.selectionStart;
+    renderHist();
+    var q2 = document.getElementById("q"); q2.focus(); try{ q2.setSelectionRange(pos,pos); }catch(e){}
+  });
+}
+
+function periodStart(){
+  var n = new Date();
+  if(statPeriod==="day") return new Date(n.getFullYear(),n.getMonth(),n.getDate()).getTime();
+  if(statPeriod==="week"){ var dow=(n.getDay()+6)%7; return new Date(n.getFullYear(),n.getMonth(),n.getDate()-dow).getTime(); }
+  return new Date(n.getFullYear(),n.getMonth(),1).getTime();
+}
+
+function renderStat(){
+  var from = periodStart(), st = FIN.periodStats(ops(), from, state.config);
+  var limitsBlock = renderLimits();
+  var cats = Object.keys(st.byCat).map(function(id){
+    var c = id==="__debt"? {name:"Долги", icon:"💳"} : catObj(id,false);
+    return {id:id, name:c.name, icon:c.icon, sum:st.byCat[id]};
+  }).sort(function(a,b){ return b.sum-a.sum; });
+
+  var h = limitsBlock;
+  h += '<h2 class="sh" style="margin-top:4px">Отчёт за период</h2>';
+  h += '<div class="seg" role="group">'+
+    ['day','week','month'].map(function(p,i){
+      return '<button data-per="'+p+'" aria-pressed="'+String(statPeriod===p)+'">'+["Сегодня","Неделя","Месяц"][i]+'</button>';
+    }).join("")+'</div>';
+
+  h += '<div class="statGrid">'+
+    '<div class="statCell"><div class="k">Доходы</div><div class="v" style="color:var(--pos)">'+esc(money(st.income))+'</div></div>'+
+    '<div class="statCell"><div class="k">Расходы</div><div class="v" style="color:var(--neg)">'+esc(money(st.expense))+'</div></div>'+
+    '<div class="statCell"><div class="k">Разница</div><div class="v">'+esc(money(st.diff))+'</div></div>'+
+    '<div class="statCell"><div class="k">Операций</div><div class="v">'+st.count+'</div></div></div>';
+
+  h += '<div class="sect"><h2 class="sh">Расходы по категориям</h2><div class="card">';
+  if(!cats.length) h += '<div class="empty">За этот период расходов нет.</div>';
+  else{
+    h += '<div class="bars">';
+    cats.forEach(function(c){
+      var pct = st.expense>0? Math.round(c.sum/st.expense*100) : 0;
+      h += '<div><div class="barTop"><span>'+esc(c.icon+" "+c.name)+'</span><span>'+esc(money(c.sum))+' · '+pct+'%</span></div>'+
+           '<div class="track"><div class="fill" style="width:'+pct+'%"></div></div></div>';
+    });
+    h += '</div>';
+  }
+  h += '</div></div>';
+
+  view.innerHTML = h;
+}
+
+/* Лимиты месяца отдельным блоком: на телефоне это первое, что хочется видеть. */
+function renderLimits(){
+  var monthFrom = new Date(new Date().getFullYear(), new Date().getMonth(), 1).getTime();
+  var limited = state.config.categories.filter(function(c){ return Number(state.config.limits[c.id])>0; });
+  if(!limited.length){
+    return '<div class="card" style="padding:14px"><div class="hint">Лимитов пока нет. Задай месячный лимит по категории на вкладке Ещё, и здесь появится полоса с остатком.</div>'+
+           '<button class="linkBtn" data-act="goMore">Настроить лимиты →</button></div>';
+  }
+  var h = '<div class="sect"><h2 class="sh">Лимиты на месяц</h2><div class="card"><div class="bars">';
+  limited.forEach(function(c){
+    var lim = Number(state.config.limits[c.id]);
+    var spent = FIN.spentInCategory(ops(), c.id, monthFrom, state.config);
+    var over = spent>lim, pct = Math.min(100, Math.round(spent/lim*100));
+    var cls = over? "over" : (pct>=80? "warn":"");
+    h += '<div><div class="barTop"><span>'+esc(c.icon+" "+c.name)+'</span><span>'+esc(money(spent))+' / '+esc(money(lim))+'</span></div>'+
+         '<div class="track"><div class="fill '+cls+'" style="width:'+(over?100:pct)+'%"></div></div>'+
+         '<div class="note '+(over?"over":"")+'">'+(over? "⚠️ Лимит превышен на "+esc(fmt(FIN.r2(spent-lim))) : "Осталось "+esc(fmt(FIN.r2(lim-spent))))+'</div></div>';
+  });
+  return h + '</div></div></div>';
+}
+
+function renderDebt(){
+  var rows = FIN.debtBreakdown(state.config, ops()).filter(function(r){ return r.listed || r.amount!==0; });
+  var h = '<div class="card" style="padding:14px"><div class="eyebrow">Всего должен</div>'+
+    '<div style="font-family:var(--f-display); font-size:28px; font-weight:800; font-variant-numeric:tabular-nums; margin-top:2px">'+esc(fmt(FIN.totalDebt(state.config, ops())))+'</div></div>';
+  h += '<div class="sect"><h2 class="sh">Кому</h2><div class="card">';
+  if(!rows.length) h += '<div class="empty"><b>Список пуст</b>Добавь человека на вкладке Ещё.</div>';
+  else rows.forEach(function(r){
+    h += '<div class="accRow"><div class="accIco">◷</div><div class="accName">'+esc(r.person)+
+      '<div class="opSub">'+(r.amount>0? "остаток долга" : r.amount<0? "переплата" : "закрыт")+'</div></div>'+
+      '<div class="accVal" style="color:'+(r.amount>0?"var(--neg)":"var(--muted)")+'">'+esc(fmt(r.amount))+'</div></div>';
+  });
+  h += '</div></div>';
+  h += '<div class="actions"><button class="act primary" data-act="debt"><b>＋</b>Добавить долг</button>'+
+       '<button class="act" data-act="repay"><b>✓</b>Погасить</button></div>';
+  h += '<div class="hint">Новый долг не трогает деньги, он фиксирует обязательство. Погашение одной операцией списывает сумму со счёта и уменьшает долг перед конкретным человеком. Частичное погашение просто делается несколько раз.</div>';
+  view.innerHTML = h;
+}
+
+function renderMore(){
+  var h = '<div class="sect"><h2 class="sh">Стартовые остатки</h2><div class="card">';
+  state.config.accounts.forEach(function(a){
+    h += '<div class="setRow"><div class="accIco">'+esc(a.icon)+'</div><div class="lbl">'+esc(a.name)+'</div>'+
+      '<input class="inp" inputmode="decimal" id="start_'+esc(a.id)+'" value="'+esc(String(a.start))+'"></div>';
+  });
+  h += '</div><div class="hint">Деньги, которые были на счетах до того, как ты начал записывать операции.</div></div>';
+
+  h += '<div class="sect"><h2 class="sh">Месячные лимиты</h2><div class="card">';
+  state.config.categories.forEach(function(c){
+    var v = state.config.limits[c.id]!=null? state.config.limits[c.id] : "";
+    h += '<div class="setRow"><div class="accIco">'+esc(c.icon)+'</div><div class="lbl">'+esc(c.name)+'</div>'+
+      '<input class="inp" inputmode="decimal" placeholder="нет" id="lim_'+esc(c.id)+'" value="'+esc(String(v))+'"></div>';
+  });
+  h += '</div></div>';
+
+  h += '<div class="sect"><h2 class="sh">Категории расходов</h2><div class="card">';
+  state.config.categories.forEach(function(c,i){
+    h += '<div class="setRow"><div class="accIco">'+esc(c.icon)+'</div><div class="lbl">'+esc(c.name)+'</div>'+
+      '<button class="miniBtn" data-rmcat="'+i+'">Убрать</button></div>';
+  });
+  h += '<div class="setRow"><input class="inp" id="newCatIcon" placeholder="🙂" style="max-width:62px; text-align:center">'+
+       '<input class="inp" id="newCat" placeholder="Название" style="max-width:none; text-align:left">'+
+       '<button class="miniBtn solid" data-act="addCat">Добавить</button></div></div>'+
+       '<div class="hint">Убрать можно только категорию, по которой ещё нет операций.</div></div>';
+
+  h += '<div class="sect"><h2 class="sh">Люди</h2><div class="card">';
+  state.config.people.forEach(function(p,i){
+    h += '<div class="setRow"><div class="lbl">'+esc(p)+'</div><button class="miniBtn" data-rmperson="'+i+'">Убрать</button></div>';
+  });
+  h += '<div class="setRow"><input class="inp" id="newPerson" placeholder="Имя" style="max-width:none; text-align:left">'+
+       '<button class="miniBtn solid" data-act="addPerson">Добавить</button></div></div></div>';
+
+  var locked = !!lockCfg();
+  h += '<div class="sect"><h2 class="sh">Код доступа</h2><div class="card fieldset">'+
+    '<div class="hint">'+(locked? "Код установлен. Кошелёк запирается при запуске и через полторы минуты после сворачивания."
+      : "Четыре цифры на входе. Защищает от того, кто возьмёт разблокированный телефон в руки.")+'</div>'+
+    (locked? '<button class="btn danger" data-act="pinOff">Убрать код</button>'
+           : '<button class="btn ghost" data-act="pinOn">Поставить код</button>')+
+    '</div></div>';
+
+  h += '<div class="sect"><h2 class="sh">Резервная копия</h2><div class="card fieldset">'+
+    '<button class="btn ghost" data-act="backup">Полная копия, файл JSON</button>'+
+    '<div class="hint">В копию входит всё: операции, долги, счета с остатками, категории и лимиты. Из неё система восстанавливается целиком.</div>'+
+    '<button class="btn ghost" data-act="restore">Восстановить из копии</button>'+
+    '<button class="btn ghost" data-act="exportFin">Операции в CSV</button>'+
+    '<button class="btn ghost" data-act="exportDebt">Долги в CSV</button>'+
+    '<div class="hint">CSV открывается в Numbers и Excel. Разделитель точка с запятой, формат тот самый: id, дата, время, тип, категория, человек, комментарий, счёт, сумма со знаком.</div>'+
+    '<button class="btn danger" data-act="wipe">Удалить все операции</button>'+
+    '</div></div>';
+
+  if(supaConfigured()){
+    h += '<div class="sect"><h2 class="sh">Аккаунт</h2><div class="card fieldset">'+
+      '<div class="hint">'+(SUPA_USER? "Вход выполнен: "+esc(SUPA_USER.email||"") : "Вход не выполнен, данные остаются только на этом устройстве.")+'</div>'+
+      (SUPA_USER? '<button class="btn ghost" data-act="signOut">Выйти</button>'
+                : '<button class="btn" data-act="signIn">Войти</button>')+
+      '</div></div>';
+  }
+  h += '<div class="hint">Хранилище: '+(state.cloud
+    ? (supaConfigured()? "своя база Supabase. Данные видны с любого устройства, где выполнен вход, и переживают перезагрузку."
+                       : "база этой страницы на сервере. Данные видны с любого твоего устройства под твоим аккаунтом и переживают перезагрузку.")
+    : "пока только этот браузер. Записи не потеряются, они уйдут в базу при первом успешном соединении.")+'</div>';
+  view.innerHTML = h;
+
+  state.config.accounts.forEach(function(a){
+    var el = document.getElementById("start_"+a.id);
+    el.addEventListener("change", function(){
+      var n = parseNonNeg(el.value);
+      if(!isFinite(n)){ toast("Остаток: только цифры, максимум две после запятой, без минуса"); el.value = String(a.start); return; }
+      a.start = n;
+      state.config.setupDone = true; markConfig(); render(); toast("Остаток сохранён");
+    });
+  });
+  state.config.categories.forEach(function(c){
+    var el = document.getElementById("lim_"+c.id);
+    el.addEventListener("change", function(){
+      var n = parseNonNeg(el.value);
+      if(!isFinite(n)){ toast("Лимит: только цифры, максимум две после запятой"); el.value = state.config.limits[c.id]!=null? String(state.config.limits[c.id]) : ""; return; }
+      if(n>0) state.config.limits[c.id] = n; else delete state.config.limits[c.id];
+      markConfig(); toast(n>0? "Лимит сохранён" : "Лимит снят");
+    });
+  });
+}
+
+/* ---------- листы ---------- */
+var sheetEl = null;
+function closeSheet(){ if(sheetEl){ sheetEl.remove(); sheetEl=null; } if(location.hash) history.replaceState(null,"",location.pathname+location.search); }
+function openSheet(title, body, onMount){
+  closeSheet();
+  var scrim = document.createElement("div");
+  scrim.className = "scrim";
+  scrim.innerHTML = '<div class="sheet" role="dialog" aria-modal="true" aria-label="'+esc(title)+'">'+
+    '<div class="sheetHead"><h3>'+esc(title)+'</h3><button class="x" data-close aria-label="Закрыть">✕</button></div>'+
+    '<div class="fieldset">'+body+'</div></div>';
+  scrim.addEventListener("click", function(e){ if(e.target===scrim || e.target.closest("[data-close]")) closeSheet(); });
+  document.body.appendChild(scrim); sheetEl = scrim;
+  if(onMount) onMount(scrim);
+}
+function toast(msg){
+  var t = document.createElement("div"); t.className="toast"; t.textContent=msg;
+  document.body.appendChild(t); setTimeout(function(){ t.remove(); }, 2300);
+}
+function chipsHTML(items, name, sel){
+  return '<div class="chips" data-chips="'+esc(name)+'">'+items.map(function(i){
+    return '<button type="button" class="chip" data-val="'+esc(i.id)+'" aria-pressed="'+String(i.id===sel)+'">'+esc((i.icon||"")+" "+i.name)+'</button>';
+  }).join("")+'</div>';
+}
+function wireChips(root){
+  root.querySelectorAll("[data-chips]").forEach(function(g){
+    g.addEventListener("click", function(e){
+      var b = e.target.closest(".chip"); if(!b) return;
+      g.querySelectorAll(".chip").forEach(function(c){ c.setAttribute("aria-pressed", String(c===b)); });
+    });
+  });
+}
+function chipVal(root, name){
+  var g = root.querySelector('[data-chips="'+name+'"]'); if(!g) return null;
+  var b = g.querySelector('.chip[aria-pressed="true"]'); return b? b.dataset.val : null;
+}
+function amtField(o){
+  /* Главное поле формы: крупный шрифт, цифровая клавиатура, автофокус.
+     enterkeyhint подсказывает клавиатуре показать Готово вместо Ввода. */
+  return '<label class="f">Сумма, '+CUR+
+    '<input class="inp amount" id="amt" type="text" inputmode="decimal" enterkeyhint="done" autocomplete="off" '+
+    'placeholder="0,00" value="'+(o && o.amount!=null? esc(String(o.amount).replace(".",",")) : "")+'"></label>';
+}
+function noteField(o){
+  return '<label class="f">Комментарий<input class="inp" id="note" placeholder="необязательно" value="'+esc(o&&o.note||"")+'"></label>';
+}
+function delBtn(o){ return o? '<button class="btn danger" id="del">Удалить операцию</button>' : ""; }
+/* Одно правило разбора суммы и одно сообщение об ошибке на все листы. */
+function readAmt(root){
+  var a = parseAmt(root.querySelector("#amt").value);
+  if(!isFinite(a)){ toast("Сумма: только цифры, не больше двух знаков после запятой, минимум 0,01"); root.querySelector("#amt").focus(); return null; }
+  return a;
+}
+/* Единая точка записи: кандидат проверяется ядром, отказ показывается словами. */
+function commit(ex, base, patch, okMsg){
+  var cand = ex? Object.assign({}, ex, patch)
+               : Object.assign({id:uid(), ts:new Date().toISOString()}, base, patch);
+  var v = FIN.validateOp(cand, state.config, ops());
+  if(!v.ok){ toast(v.error); return false; }
+  if(ex) saveOp(ex.id, patch); else addOp(cand);
+  closeSheet(); toast(ex? "Сохранено, балансы пересчитаны" : okMsg);
+  return true;
+}
+function wireDel(root, o){
+  var d = root.querySelector("#del");
+  if(d) d.addEventListener("click", function(){ removeOp(o.id); closeSheet(); toast("Операция удалена, балансы пересчитаны"); });
+}
+
+/* Быстрое добавление: сначала тип операции крупными строками, потом
+   сразу нужная форма. Два касания до записи расхода. */
+/* Фокус на сумме с небольшой задержкой: iOS иначе не всегда открывает
+   клавиатуру для поля внутри только что вставленного листа.
+   Клавиша Готово на клавиатуре сразу сохраняет операцию. */
+function focusAmount(root){
+  var amt = root.querySelector("#amt");
+  if(!amt) return;
+  setTimeout(function(){ try{ amt.focus(); }catch(e){} }, 60);
+  amt.addEventListener("keydown", function(e){
+    if(e.key==="Enter"){ e.preventDefault(); var b = root.querySelector("#save"); if(b) b.click(); }
+  });
+}
+function sheetQuickAdd(){
+  var rows = [
+    ["expense", "−",  "Расход",  "покупка, услуга, поездка", true],
+    ["income",  "＋", "Доход",   "зарплата, подарок, возврат от кого-то", false],
+    ["transfer","⇄",  "Перевод", "между своими счетами, баланс не меняется", false],
+    ["debt",    "◷",  "Долг",    "взял в долг, деньги не двигаются", false],
+    ["repay",   "✓",  "Возврат долга", "отдал долг со счёта", false]
+  ];
+  openSheet("Что записываем", '<div class="pickList">'+rows.map(function(r){
+    return '<button class="pick'+(r[4]?" primary":"")+'" data-pick="'+r[0]+'">'+
+      '<span class="pi">'+r[1]+'</span><span>'+esc(r[2])+'<span class="ps">'+esc(r[3])+'</span></span></button>';
+  }).join("")+'</div>', function(root){
+    root.addEventListener("click", function(e){
+      var b = e.target.closest("[data-pick]"); if(!b) return;
+      var kind = b.dataset.pick;
+      if(kind==="expense"||kind==="income") sheetMoney(kind);
+      else if(kind==="transfer") sheetTransfer();
+      else if(kind==="debt") sheetDebt();
+      else if(kind==="repay") sheetRepay();
+    });
+  });
+}
+
+function sheetMoney(kind, ex){
+  var isInc = kind==="income";
+  var cats = isInc? state.config.incomeCats : state.config.categories;
+  if(!cats.length){ toast("Сначала добавь категорию на вкладке Ещё"); return; }
+  if(!state.config.accounts.length){ toast("Нет ни одного счёта"); return; }
+  var o = ex||{};
+  var body = amtField(o)+
+    '<label class="f">Счёт</label>'+chipsHTML(state.config.accounts,"acc", o.account||state.config.accounts[0].id)+
+    '<label class="f">Категория</label>'+chipsHTML(cats,"cat", o.category||cats[0].id)+
+    noteField(o)+
+    '<div class="rowBtns"><button class="btn" id="save">'+(ex?"Сохранить":(isInc?"Записать доход":"Записать расход"))+'</button></div>'+delBtn(ex);
+  openSheet(ex?"Правка операции":(isInc?"Доход":"Расход"), body, function(root){
+    wireChips(root); focusAmount(root);
+    root.querySelector("#save").addEventListener("click", function(){
+      var a = readAmt(root); if(a===null) return;
+      var patch = {amount:a, account:chipVal(root,"acc"), category:chipVal(root,"cat"), note:root.querySelector("#note").value.trim()};
+      commit(ex, {type:kind, person:"", toAccount:""}, patch, isInc?"Доход записан":"Расход записан");
+    });
+    wireDel(root, ex);
+  });
+}
+
+function sheetTransfer(ex){
+  var o = ex||{}, accs = state.config.accounts;
+  var body = amtField(o)+
+    '<label class="f">Откуда</label>'+chipsHTML(accs,"from", o.account||accs[0].id)+
+    '<label class="f">Куда</label>'+chipsHTML(accs,"to", o.toAccount||accs[1].id)+
+    noteField(o)+
+    '<div class="hint">Перевод между своими счетами не доход и не расход. Общий баланс не меняется, меняется только раскладка по счетам.</div>'+
+    '<div class="rowBtns"><button class="btn" id="save">'+(ex?"Сохранить":"Перевести")+'</button></div>'+delBtn(ex);
+  openSheet(ex?"Правка перевода":"Перевод", body, function(root){
+    wireChips(root); focusAmount(root);
+    root.querySelector("#save").addEventListener("click", function(){
+      var a = readAmt(root); if(a===null) return;
+      var from = chipVal(root,"from"), to = chipVal(root,"to");
+      var patch = {amount:a, account:from, toAccount:to, note:root.querySelector("#note").value.trim()};
+      commit(ex, {type:"transfer", category:"", person:""}, patch, "Перевод записан");
+    });
+    wireDel(root, ex);
+  });
+}
+
+function sheetDebt(ex){
+  var o = ex||{};
+  var people = state.config.people.map(function(p){ return {id:p, name:p, icon:"◷"}; });
+  if(!people.length && !o.person){ toast("Сначала добавь человека на вкладке Ещё"); return; }
+  if(o.person && !state.config.people.includes(o.person)) people = people.concat([{id:o.person,name:o.person,icon:"◷"}]);
+  var body = amtField(o)+
+    '<label class="f">Кому должен</label>'+chipsHTML(people,"per", o.person||people[0].id)+
+    noteField(o)+
+    '<div class="hint">Деньги на счетах не изменятся, фиксируется только обязательство.</div>'+
+    '<div class="rowBtns"><button class="btn" id="save">'+(ex?"Сохранить":"Записать долг")+'</button></div>'+delBtn(ex);
+  openSheet(ex?"Правка долга":"Новый долг", body, function(root){
+    wireChips(root); focusAmount(root);
+    root.querySelector("#save").addEventListener("click", function(){
+      var a = readAmt(root); if(a===null) return;
+      var patch = {amount:a, person:chipVal(root,"per"), note:root.querySelector("#note").value.trim()};
+      commit(ex, {type:"debt", account:"", toAccount:"", category:""}, patch, "Долг записан");
+    });
+    wireDel(root, ex);
+  });
+}
+
+function sheetRepay(ex){
+  var o = ex||{};
+  var names = state.config.people.slice();
+  if(o.person && names.indexOf(o.person)<0) names.push(o.person);
+  if(!names.length){ toast("Сначала добавь человека на вкладке Ещё"); return; }
+  var people = names.map(function(p){ return {id:p, name:p+" · "+money(FIN.debtFor(ops(), p, null, state.config)), icon:"◷"}; });
+  var body = amtField(o)+
+    '<label class="f">Кому отдаю</label>'+chipsHTML(people,"per", o.person||names[0])+
+    '<label class="f">С какого счёта</label>'+chipsHTML(state.config.accounts,"acc", o.account||state.config.accounts[0].id)+
+    noteField(o)+
+    '<div class="hint">Одна операция: деньги уходят со счёта и долг перед этим человеком уменьшается. Отдельный расход создавать не нужно, иначе спишется дважды.</div>'+
+    '<div class="rowBtns"><button class="btn" id="save">'+(ex?"Сохранить":"Погасить")+'</button></div>'+delBtn(ex);
+  openSheet(ex?"Правка погашения":"Погашение долга", body, function(root){
+    wireChips(root); focusAmount(root);
+    root.querySelector("#save").addEventListener("click", function(){
+      var a = readAmt(root); if(a===null) return;
+      var patch = {amount:a, person:chipVal(root,"per"), account:chipVal(root,"acc"), note:root.querySelector("#note").value.trim()};
+      commit(ex, {type:"repay", category:"debt", toAccount:""}, patch, "Долг уменьшен");
+    });
+    wireDel(root, ex);
+  });
+}
+
+/* Нерабочую запись нельзя редактировать как обычную: любая правка всё равно
+   пойдёт через validateOp и будет отвергнута. Предлагаем только удалить. */
+function sheetBroken(o){
+  var why = [];
+  if(!isFinite(FIN.tsMs(o))) why.push("дата операции отсутствует или не читается");
+  if(!(FIN.amountOf(o)>0)) why.push("сумма не подходит: нужно положительное число не меньше 0,01 и не точнее копейки");
+  if(FIN.TYPES.indexOf(o.type)<0) why.push("неизвестный тип операции");
+  if(!why.length) why.push("операция ссылается на несуществующий счёт, человека без долга или погашает больше, чем долг");
+  openSheet("Нерабочая запись",
+    '<div class="hint">Эта запись не участвует в расчётах: '+esc(why.join("; "))+'.</div>'+
+    '<div class="hint">Так выглядят данные, попавшие в базу мимо приложения, например после ручной правки копии. '+
+    'Исправить её здесь нельзя, но можно удалить, на балансы это не повлияет.</div>'+
+    '<textarea class="csvBox" readonly id="raw" style="min-height:90px"></textarea>'+
+    '<div class="rowBtns"><button class="btn ghost" data-close>Оставить</button>'+
+    '<button class="btn danger" id="killIt">Удалить запись</button></div>', function(root){
+    root.querySelector("#raw").value = JSON.stringify(o, null, 1);
+    root.querySelector("#killIt").addEventListener("click", function(){
+      removeOp(o.id); closeSheet(); toast("Нерабочая запись удалена");
+    });
+  });
+}
+
+function sheetSetup(){
+  var body = state.config.accounts.map(function(a){
+    return '<label class="f">'+esc(a.icon+" "+a.name)+'<input class="inp amount" id="s_'+esc(a.id)+'" inputmode="decimal" placeholder="0,00" value="'+esc(String(a.start||""))+'"></label>';
+  }).join("")+'<div class="rowBtns"><button class="btn" id="save">Сохранить</button></div>';
+  openSheet("Стартовые остатки", body, function(root){
+    root.querySelector("#save").addEventListener("click", function(){
+      var raw = state.config.accounts.map(function(a){ return root.querySelector("#s_"+a.id).value; });
+      var parsed = parseStarts(raw);
+      if(!parsed.ok){
+        var badAcc = state.config.accounts[parsed.index];
+        toast("Остаток для счёта " + (badAcc? badAcc.name : "") + ": только цифры, максимум две после запятой, без минуса");
+        return;                                   // ни один остаток не применён
+      }
+      state.config.accounts.forEach(function(a,i){ a.start = parsed.values[i]; });
+      state.config.setupDone = true; markConfig(); closeSheet(); render(); toast("Остатки сохранены");
+    });
+  });
+}
+
+function sheetPin(){
+  var body = '<label class="f">Новый код, четыре цифры<input class="inp amount" id="p1" inputmode="numeric" maxlength="4" placeholder="••••"></label>'+
+    '<label class="f">Ещё раз<input class="inp amount" id="p2" inputmode="numeric" maxlength="4" placeholder="••••"></label>'+
+    '<div class="hint">Код хранится только на этом устройстве и только в виде отпечатка. Если забудешь, сними его через очистку данных сайта в Сафари, данные при этом останутся в облаке.</div>'+
+    '<div class="rowBtns"><button class="btn" id="save">Поставить</button></div>';
+  openSheet("Код доступа", body, function(root){
+    root.querySelector("#save").addEventListener("click", async function(){
+      var a = root.querySelector("#p1").value.trim(), b = root.querySelector("#p2").value.trim();
+      if(!/^\d{4}$/.test(a)){ toast("Нужны четыре цифры"); return; }
+      if(a!==b){ toast("Коды не совпали"); return; }
+      var salt = uid();
+      lsSet(LS_LOCK, {salt:salt, hash: await sha(salt+a)});
+      closeSheet(); render(); toast("Код установлен");
+    });
+  });
+}
+
+function openOp(id){
+  var f = findOp(id); if(!f) return;
+  var o = f.op;
+  if(FIN.rejectedIds(ops(), state.config)[o.id]){ sheetBroken(o); return; }
+  if(o.type==="income"||o.type==="expense") sheetMoney(o.type, o);
+  else if(o.type==="transfer") sheetTransfer(o);
+  else if(o.type==="debt") sheetDebt(o);
+  else if(o.type==="repay") sheetRepay(o);
+}
+
+/* ---------- выгрузка ---------- */
+/* Обычная браузерная выгрузка: Blob, временная ссылка, клик, отзыв ссылки.
+   Работает на любом сайте, в том числе на GitHub Pages. */
+function downloadBlob(name, text, type){
+  try{
+    var blob = new Blob([text], {type: (type||"text/plain")+";charset=utf-8"});
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement("a");
+    a.href = url; a.download = name; a.rel = "noopener";
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(function(){ URL.revokeObjectURL(url); }, 4000);
+    return true;
+  }catch(e){ return false; }
+}
+async function saveFile(name, text){
+  var type = /\.json$/i.test(name)? "application/json" : (/\.csv$/i.test(name)? "text/csv" : "text/plain");
+  /* На странице артефакта скачивание из песочницы заблокировано, там есть
+     своя возможность. Везде ещё работает обычный Blob. */
+  var dl = null;
+  try{ dl = await (window.claude && window.claude.use ? window.claude.use("downloads") : null); }catch(e){}
+  if(dl){ try{ await dl.save({filename:name, data:text}); toast("Файл сохранён"); return; }catch(e){} }
+  if(downloadBlob(name, text, type)){ toast("Файл сохранён"); return; }
+  openSheet("Копия "+name, '<div class="hint">Скопируй текст и сохрани его в файл '+esc(name)+' или отправь себе в мессенджер.</div>'+
+    '<textarea class="csvBox" id="out" readonly></textarea>'+
+    '<div class="rowBtns"><button class="btn" id="copy">Скопировать</button></div>', function(root){
+    var ta = root.querySelector("#out"); ta.value = text;
+    root.querySelector("#copy").addEventListener("click", async function(){
+      try{ await navigator.clipboard.writeText(text); toast("Скопировано"); }
+      catch(e){ ta.select(); toast("Выдели и скопируй вручную"); }
+    });
+  });
+}
+function sheetRestore(){
+  openSheet("Восстановление", '<div class="hint">Вставь содержимое файла копии. Текущие данные будут полностью заменены.</div>'+
+    '<textarea class="csvBox" id="in" placeholder="{ ... }"></textarea>'+
+    '<div class="rowBtns"><button class="btn ghost" data-close>Отмена</button><button class="btn" id="go">Восстановить</button></div>', function(root){
+    root.querySelector("#go").addEventListener("click", function(){
+      try{
+        var r = FIN.restore(root.querySelector("#in").value);
+        var now = Date.now();
+        /* Восстановленные операции получают свежую отметку правки: только
+           так они перебивают надгробия, оставшиеся от прошлых удалений. */
+        var restored = {};
+        Object.keys(r.months).forEach(function(k){
+          restored[k] = (r.months[k]||[]).map(function(o){ return Object.assign({}, o, {upd: now}); });
+        });
+        state.tomb = planRestore(state.months, state.tomb, restored, now);
+        state.config = safeConfig(r.config); state.config.upd = now;
+        state.months = restored;
+        pending.config = true;
+        Object.keys(state.months).forEach(function(k){ pending.months[k]=true; });
+        Object.keys(state.tomb).forEach(function(k){ pending.months[k]=true; });
+        savePending(); saveCache(); flush(); closeSheet(); render(); toast("Данные восстановлены");
+      }catch(e){ toast("Не получилось прочитать копию"); }
+    });
+  });
+}
+
+/* ---------- события ---------- */
+document.getElementById("tabs").addEventListener("click", function(e){
+  var b = e.target.closest("button[data-tab]"); if(!b) return;
+  tab = b.dataset.tab; search=""; render(); document.querySelector("main").scrollTop = 0;
+});
+document.getElementById("fab").addEventListener("click", function(){ sheetQuickAdd(); });
+document.getElementById("eyeBtn").addEventListener("click", function(){
+  hideAmounts = !hideAmounts; lsSet(LS_PREF, {hide:hideAmounts}); render();
+});
+
+view.addEventListener("click", function(e){
+  var per = e.target.closest("[data-per]");
+  if(per){ statPeriod = per.dataset.per; render(); return; }
+  var hf = e.target.closest("[data-hf]");
+  if(hf){ histFilter = hf.dataset.hf; renderHist(); return; }
+  var opBtn = e.target.closest("[data-op]");
+  if(opBtn){ openOp(opBtn.dataset.op); return; }
+  var badBtn = e.target.closest("[data-bad]");
+  if(badBtn){ var bf = findOp(badBtn.dataset.bad); if(bf) sheetBroken(bf.op); return; }
+  var rmp = e.target.closest("[data-rmperson]");
+  if(rmp){
+    var name = state.config.people[Number(rmp.dataset.rmperson)];
+    if(Math.abs(FIN.debtFor(ops(), name, null, state.config))>0.001){ toast("Сначала закрой долг этого человека"); return; }
+    state.config.people = state.config.people.filter(function(_,i){ return i!==Number(rmp.dataset.rmperson); });
+    markConfig(); render(); return;
+  }
+  var rmc = e.target.closest("[data-rmcat]");
+  if(rmc){
+    var cat = state.config.categories[Number(rmc.dataset.rmcat)];
+    var used = ops().some(function(o){ return o.category===cat.id; });
+    if(used){ toast("По этой категории уже есть операции"); return; }
+    if(state.config.categories.length<=1){ toast("Нужна хотя бы одна категория"); return; }
+    state.config.categories = state.config.categories.filter(function(c){ return c.id!==cat.id; });
+    delete state.config.limits[cat.id];
+    markConfig(); render(); return;
+  }
+  var a = e.target.closest("[data-act]"); if(!a) return;
+  var act = a.dataset.act;
+  if(act==="income") sheetMoney("income");
+  else if(act==="expense") sheetMoney("expense");
+  else if(act==="transfer") sheetTransfer();
+  else if(act==="debt") sheetDebt();
+  else if(act==="repay") sheetRepay();
+  else if(act==="setup") sheetSetup();
+  else if(act==="goHist"){ tab="hist"; render(); }
+  else if(act==="goMore"){ tab="more"; render(); }
+  else if(act==="toggleBroken"){ showBroken = !showBroken; renderHist(); }
+  else if(act==="signIn"){ supaClient().then(function(c){ if(c) showAuth(c); }); }
+  else if(act==="signOut") supaSignOut();
+  else if(act==="pinOn") sheetPin();
+  else if(act==="pinOff"){ try{ localStorage.removeItem(LS_LOCK); }catch(e){} render(); toast("Код убран"); }
+  else if(act==="addPerson"){
+    var el = document.getElementById("newPerson"), v = el.value.trim();
+    if(!v) return;
+    if(state.config.people.indexOf(v)<0) state.config.people = state.config.people.concat([v]);
+    markConfig(); render(); toast("Добавлен");
+  }
+  else if(act==="addCat"){
+    var nm = document.getElementById("newCat").value.trim();
+    var ic = document.getElementById("newCatIcon").value.trim() || "📦";
+    if(!nm) return;
+    var id = "c"+uid().slice(0,6);
+    state.config.categories = state.config.categories.concat([{id:id, name:nm, icon:ic}]);
+    markConfig(); render(); toast("Категория добавлена");
+  }
+  else if(act==="backup") saveFile("wallet-backup.json", FIN.backup(state.config, state.months));
+  else if(act==="restore") sheetRestore();
+  else if(act==="exportFin") saveFile("finance.csv", FIN.csvFinance(state.config, ops()));
+  else if(act==="exportDebt") saveFile("debts.csv", FIN.csvDebts(ops(), state.config));
+  else if(act==="wipe"){
+    openSheet("Удалить все операции", '<div class="hint">Все записи будут стёрты. Счета, категории, люди и лимиты останутся. Сначала имеет смысл сделать копию.</div>'+
+      '<div class="rowBtns"><button class="btn ghost" data-close>Отмена</button><button class="btn danger" id="yes">Удалить</button></div>', function(root){
+      root.querySelector("#yes").addEventListener("click", function(){
+        var now = Date.now();
+        Object.keys(state.months).forEach(function(k){
+          if(!state.tomb[k]) state.tomb[k] = {};
+          (state.months[k]||[]).forEach(function(o){ state.tomb[k][o.id] = now; });
+          state.months[k] = []; pending.months[k] = true;
+        });
+        savePending(); saveCache(); flush(); closeSheet(); render(); toast("Операции удалены");
+      });
+    });
+  }
+});
+
+document.addEventListener("keydown", function(e){ if(e.key==="Escape") closeSheet(); });
+
+function handleHash(){
+  var h = (location.hash||"").replace("#","");
+  if(h==="add") sheetQuickAdd();
+  else if(h==="income") sheetMoney("income");
+  else if(h==="expense") sheetMoney("expense");
+  else if(h==="transfer") sheetTransfer();
+  else if(h==="debt") sheetDebt();
+  else if(h==="repay") sheetRepay();
+  else if(h==="stat"){ tab="stat"; render(); }
+  else if(h==="debts"){ tab="debt"; render(); }
+}
+window.addEventListener("hashchange", handleHash);
+
+/* Офлайн и иконка на экране Домой: service worker работает только на
+   https, то есть на GitHub Pages. На артефакте и с локального файла
+   регистрация просто не случится, приложение от этого не страдает. */
+if("serviceWorker" in navigator && (location.protocol === "https:" || location.hostname === "localhost" || location.hostname === "127.0.0.1")){
+  window.addEventListener("load", function(){
+    navigator.serviceWorker.register("sw.js").catch(function(){});
+  });
+}
+
+boot();
+</script>
+
+</body>
+</html>
