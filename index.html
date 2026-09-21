@@ -73,8 +73,8 @@ header.top{flex:none; padding:13px 16px 11px; background:var(--surface); border-
 main{flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch}
 .wrap{padding:16px 16px 96px; display:flex; flex-direction:column; gap:16px; max-width:720px; margin:0 auto}
 
-nav.tabs{flex:none; display:grid; grid-template-columns:repeat(5,1fr); background:var(--surface); border-top:1px solid var(--line-soft); padding-bottom:env(safe-area-inset-bottom, 0px)}
-nav.tabs button{min-height:52px; padding:9px 2px 10px; font-size:11px; font-weight:600; color:var(--muted); border-top:2px solid transparent; margin-top:-1px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px; line-height:1}
+nav.tabs{flex:none; display:grid; grid-template-columns:repeat(6,1fr); background:var(--surface); border-top:1px solid var(--line-soft); padding-bottom:env(safe-area-inset-bottom, 0px)}
+nav.tabs button{min-height:52px; padding:9px 1px 10px; font-size:10px; letter-spacing:-.01em; font-weight:600; color:var(--muted); border-top:2px solid transparent; margin-top:-1px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px; line-height:1}
 nav.tabs button .ti{font-size:17px; line-height:1}
 nav.tabs button[aria-current="true"]{color:var(--accent); border-top-color:var(--accent)}
 
@@ -200,6 +200,31 @@ input.amount{font-family:var(--f-num); font-size:32px; font-weight:600; padding:
 .keypad{display:grid; grid-template-columns:repeat(3,72px); gap:12px}
 .keypad button{height:62px; border-radius:16px; background:var(--surface); border:1px solid var(--line-soft); font-family:var(--f-num); font-size:22px; font-weight:600; box-shadow:var(--shadow)}
 .keypad button.flat{background:transparent; border:none; box-shadow:none; font-size:14px; font-family:var(--f-body); font-weight:600; color:var(--muted)}
+
+/* ---------- помощник ---------- */
+.chatLog{display:flex; flex-direction:column; gap:9px; min-height:26vh}
+.msg{max-width:86%; padding:10px 12px; border-radius:15px; font-size:15px; line-height:1.45; white-space:pre-wrap; overflow-wrap:anywhere}
+.msg.me{align-self:flex-end; background:var(--accent); color:var(--accent-ink); border-bottom-right-radius:5px}
+.msg.ai{align-self:flex-start; background:var(--surface); border:1px solid var(--line-soft); border-bottom-left-radius:5px; box-shadow:var(--shadow)}
+.msg.sys{align-self:center; max-width:94%; text-align:center; background:var(--chip); color:var(--muted); font-size:12px; border-radius:999px; padding:6px 13px}
+.msg.typing{display:flex; gap:5px; align-items:center; padding:14px}
+.msg.typing i{display:block; width:6px; height:6px; border-radius:50%; background:var(--muted); animation:blink 1.2s infinite}
+.msg.typing i:nth-child(2){animation-delay:.2s}
+.msg.typing i:nth-child(3){animation-delay:.4s}
+@keyframes blink{0%,60%,100%{opacity:.25} 30%{opacity:1}}
+@media (prefers-reduced-motion:reduce){.msg.typing i{animation:none}}
+.chatHello{padding:14px 2px}
+.chatHi{font-family:var(--f-display); font-size:19px; font-weight:700; margin-bottom:6px}
+/* Поле ввода держится над панелью вкладок, как в мессенджере: лента
+   прокручивается, строка всегда под большим пальцем. */
+.chatBar{position:fixed; left:0; right:0; z-index:25; bottom:calc(env(safe-area-inset-bottom, 0px) + 53px);
+  display:flex; gap:8px; align-items:flex-end; padding:9px 12px; background:var(--surface); border-top:1px solid var(--line-soft)}
+.chatIn{flex:1; resize:none; max-height:120px; background:var(--bg); border:1px solid var(--line); border-radius:12px;
+  padding:11px 12px; font-size:16px; line-height:1.4; color:var(--ink); font-family:var(--f-body)}
+.chatSend{width:44px; height:44px; flex:none; border-radius:12px; background:var(--accent); color:var(--accent-ink);
+  font-size:20px; line-height:1; display:grid; place-items:center}
+.chatSend:disabled{opacity:.45}
+.chatFoot{display:flex; align-items:center; justify-content:space-between; gap:10px; padding-bottom:24px}
 </style>
 
 <header class="top">
@@ -224,11 +249,13 @@ input.amount{font-family:var(--f-num); font-size:32px; font-weight:600; padding:
   <button data-tab="hist"><span class="ti">≡</span>История</button>
   <button data-tab="stat"><span class="ti">◔</span>Лимиты</button>
   <button data-tab="debt"><span class="ti">◷</span>Долги</button>
+  <button data-tab="ai"><span class="ti">✦</span>Помощник</button>
   <button data-tab="more"><span class="ti">•••</span>Ещё</button>
 </nav>
 
 <script src="config.js"></script>
 <script src="engine.js"></script>
+<script src="ai.js"></script>
 <script>
 "use strict";
 
@@ -912,11 +939,12 @@ function render(){
   /* На главной крупные кнопки уже на экране, круглая кнопка там только
      перекрывала бы суммы в списке. На остальных вкладках она нужна. */
   var fab = document.getElementById("fab");
-  if(fab) fab.hidden = (tab==="home");
+  if(fab) fab.hidden = (tab==="home" || tab==="ai");
   if(tab==="home") renderHome();
   else if(tab==="hist") renderHist();
   else if(tab==="stat") renderStat();
   else if(tab==="debt") renderDebt();
+  else if(tab==="ai") renderChat();
   else renderMore();
 }
 
@@ -1531,7 +1559,8 @@ function sheetRestore(){
 /* ---------- события ---------- */
 document.getElementById("tabs").addEventListener("click", function(e){
   var b = e.target.closest("button[data-tab]"); if(!b) return;
-  tab = b.dataset.tab; search=""; render(); document.querySelector("main").scrollTop = 0;
+  tab = b.dataset.tab; search=""; render();
+  if(tab!=="ai") document.querySelector("main").scrollTop = 0;
 });
 document.getElementById("fab").addEventListener("click", function(){ sheetQuickAdd(); });
 document.getElementById("eyeBtn").addEventListener("click", function(){
