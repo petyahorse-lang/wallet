@@ -196,12 +196,15 @@
       else return { out: { ok: false, error: "не указана категория, спроси у человека какую взять" } };
     }
     if (type === "repay") cand.category = "debt";
-    /* Счёт нужен всем типам, кроме ничего не значащих исключений: у перевода
-       он же счёт списания, у всех четырёх долговых операций это счёт, куда
-       деньги пришли или откуда ушли. */
-    if (!cand.account) {
+    /* Давний долг записывается без счёта: деньги по нему ходили раньше и
+       сегодняшний баланс двигать не должны. Для остальных типов счёт
+       обязателен, и угадывать его нельзя, кроме случая единственного. */
+    var oldDebt = (type === "debt" || type === "lend") &&
+      (inp.without_money === true || inp.without_money === "true");
+    if (oldDebt) cand.account = "";
+    else if (!cand.account) {
       if (cfg.accounts.length === 1) cand.account = cfg.accounts[0].id;
-      else return { out: { ok: false, error: "не указан счёт, спроси у человека с какого счёта" } };
+      else return { out: { ok: false, error: "не указан счёт, спроси у человека с какого счёта или это давний долг без движения денег" } };
     }
 
     var v = FIN.validateOp(cand, cfg, ops());
@@ -326,14 +329,18 @@
     return h;
   }
 
+  function scrollDown() {
+    var box = document.querySelector("main");
+    if (box) box.scrollTop = box.scrollHeight;
+  }
+
   function paintLog() {
     var log = document.getElementById("chatLog");
     if (!log) return;
     log.innerHTML = bubbles();
     var btn = document.getElementById("chatSend");
     if (btn) btn.disabled = chat.busy;
-    var box = document.querySelector("main");
-    if (box) box.scrollTop = box.scrollHeight;
+    scrollDown();
   }
 
   function renderChat() {
@@ -356,15 +363,18 @@
       return;
     }
 
+    /* Порядок важен: строка ввода идёт последней, потому что она липкая к
+       низу прокрутки. Стой она раньше, подпись под ней оказалась бы
+       накрыта. */
     view.innerHTML =
       '<div class="chatBox" id="chatBox"><div class="chatLog" id="chatLog"></div></div>' +
+      '<div class="chatFoot"><button class="linkBtn" id="chatClear">Очистить переписку</button>' +
+      '<span class="hint">Переписка лежит только на этом устройстве</span></div>' +
       '<div class="chatBar">' +
         '<textarea class="chatIn" id="chatIn" rows="1" enterkeyhint="send" ' +
         'placeholder="Спроси или продиктуй операцию"></textarea>' +
         '<button class="chatSend" id="chatSend" aria-label="Отправить">↑</button>' +
-      '</div>' +
-      '<div class="chatFoot"><button class="linkBtn" id="chatClear">Очистить переписку</button>' +
-      '<span class="hint">Переписка лежит только на этом устройстве</span></div>';
+      '</div>';
 
     paintLog();
     wire();
@@ -385,6 +395,12 @@
       send(t);
     }
     inp.addEventListener("input", grow);
+    /* Телефон меняет высоту видимой области не мгновенно, поэтому
+       доводим ленту до низа уже после того, как клавиатура встала. */
+    inp.addEventListener("focus", function () {
+      setTimeout(scrollDown, 250);
+      setTimeout(scrollDown, 600);
+    });
     inp.addEventListener("keydown", function (e) {
       if (e.key === "Enter" && !e.shiftKey && !e.isComposing) { e.preventDefault(); go(); }
     });

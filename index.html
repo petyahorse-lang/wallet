@@ -15,7 +15,11 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Public+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
 <style>
-:root{ padding-top:env(safe-area-inset-top, 0px); padding-bottom:env(safe-area-inset-bottom, 0px); color-scheme:light dark; }
+:root{ padding-top:env(safe-area-inset-top, 0px); color-scheme:light dark; }
+/* Безопасную зону снизу добавляет только панель вкладок, ниже по файлу.
+   Пока её учитывали и здесь, и там, она входила в разметку дважды: под
+   панелью оставалась белая полоса, а всё, что позиционируется от низа
+   экрана, промахивалось ровно на её высоту. */
 html,body{margin:0}
 img{max-width:100%}
 [hidden]{display:none!important}
@@ -49,6 +53,9 @@ img{max-width:100%}
 }
 *{box-sizing:border-box}
 html,body{height:100%}
+/* Динамическая высота: в Сафари, открытом обычной вкладкой, адресная
+   строка то появляется, то прячется, и 100% отмеряет высоту без неё. */
+@supports (height: 100dvh){ html,body{height:100dvh} }
 body{
   margin:0; background:var(--bg); color:var(--ink);
   font-family:var(--f-body); font-size:15px; line-height:1.45;
@@ -202,7 +209,12 @@ input.amount{font-family:var(--f-num); font-size:32px; font-weight:600; padding:
 .keypad button.flat{background:transparent; border:none; box-shadow:none; font-size:14px; font-family:var(--f-body); font-weight:600; color:var(--muted)}
 
 /* ---------- помощник ---------- */
-.chatLog{display:flex; flex-direction:column; gap:9px; min-height:26vh}
+/* Вкладка помощника занимает всю высоту области прокрутки: лента тянется,
+   строка ввода прижата к низу этой области. Панель вкладок стоит ниже и
+   сама по себе, поэтому перекрыть тут нечего. */
+.wrap.chatMode{padding-bottom:0; gap:0; min-height:100%}
+.chatBox{flex:1; display:flex; flex-direction:column; min-height:0}
+.chatLog{display:flex; flex-direction:column; gap:9px; flex:1; padding-bottom:10px}
 .msg{max-width:86%; padding:10px 12px; border-radius:15px; font-size:15px; line-height:1.45; white-space:pre-wrap; overflow-wrap:anywhere}
 .msg.me{align-self:flex-end; background:var(--accent); color:var(--accent-ink); border-bottom-right-radius:5px}
 .msg.ai{align-self:flex-start; background:var(--surface); border:1px solid var(--line-soft); border-bottom-left-radius:5px; box-shadow:var(--shadow)}
@@ -215,16 +227,22 @@ input.amount{font-family:var(--f-num); font-size:32px; font-weight:600; padding:
 @media (prefers-reduced-motion:reduce){.msg.typing i{animation:none}}
 .chatHello{padding:14px 2px}
 .chatHi{font-family:var(--f-display); font-size:19px; font-weight:700; margin-bottom:6px}
-/* Поле ввода держится над панелью вкладок, как в мессенджере: лента
-   прокручивается, строка всегда под большим пальцем. */
-.chatBar{position:fixed; left:0; right:0; z-index:25; bottom:calc(env(safe-area-inset-bottom, 0px) + 53px);
-  display:flex; gap:8px; align-items:flex-end; padding:9px 12px; background:var(--surface); border-top:1px solid var(--line-soft)}
+/* Строка ввода прилипает к низу области прокрутки, а не к низу экрана.
+   Область прокрутки заканчивается ровно там, где начинается панель
+   вкладок, поэтому высоту панели и безопасную зону знать не нужно: ни
+   одного числа, которое пришлось бы подбирать заново на другом телефоне
+   или после правки панели. Клавиатура по той же причине ничего не ломает,
+   она уменьшает область прокрутки, а строка едет вместе с её низом. */
+.chatBar{position:sticky; bottom:0; z-index:5;
+  display:flex; gap:8px; align-items:flex-end;
+  margin:0 -16px; padding:9px 12px;
+  background:var(--surface); border-top:1px solid var(--line-soft)}
 .chatIn{flex:1; resize:none; max-height:120px; background:var(--bg); border:1px solid var(--line); border-radius:12px;
   padding:11px 12px; font-size:16px; line-height:1.4; color:var(--ink); font-family:var(--f-body)}
 .chatSend{width:44px; height:44px; flex:none; border-radius:12px; background:var(--accent); color:var(--accent-ink);
   font-size:20px; line-height:1; display:grid; place-items:center}
 .chatSend:disabled{opacity:.45}
-.chatFoot{display:flex; align-items:center; justify-content:space-between; gap:10px; padding-bottom:24px}
+.chatFoot{display:flex; align-items:center; justify-content:space-between; gap:10px; padding:2px 0 10px}
 </style>
 
 <header class="top">
@@ -294,7 +312,18 @@ var LS_DATA = "wallet.byn.v1", LS_PEND = "wallet.byn.pending", LS_LOCK = "wallet
 var pending = {months:{}, config:false};
 
 function clone(o){ return JSON.parse(JSON.stringify(o)); }
-function uid(){ return Date.now().toString(36)+Math.random().toString(36).slice(2,8); }
+/* Идентификатор операции. Внутри одной миллисекунды важен порядок: при
+   совпавшем времени спор разрешается сравнением id, и погашение, попавшее
+   в ту же миллисекунду, что и сам долг, не должно оказаться перед ним,
+   иначе проверка увидит погашение несуществующего долга и отбросит его.
+   Раньше там стояла случайность, то есть монетка. Теперь между временем и
+   случайным хвостом идёт счётчик, и записи одной миллисекунды выстраиваются
+   в порядке создания. Хвост остаётся случайным, чтобы два устройства,
+   записавшие операцию одновременно, не выдали одинаковый id. */
+function uid(){
+  uid.seq = ((uid.seq || 0) + 1) % 1296;
+  return Date.now().toString(36) + uid.seq.toString(36).padStart(2,"0") + Math.random().toString(36).slice(2,6);
+}
 function monthKey(ts){ var d=new Date(ts); return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0"); }
 function money(n){ if(hideAmounts) return "••••"; var s=Math.abs(n).toFixed(2).replace(".",","); return (n<0?"−":"")+s; }
 function fmt(n){ return money(n)+" "+CUR; }
@@ -936,6 +965,10 @@ function render(){
   var btns = document.querySelectorAll("#tabs button");
   for(var i=0;i<btns.length;i++) btns[i].setAttribute("aria-current", String(btns[i].dataset.tab===tab));
   paintSync();
+  /* Чату нужен свой контейнер: без нижнего отступа и во всю высоту.
+     Класс ставится здесь, в одном месте, чтобы остальные вкладки о нём
+     не знали и рисовались ровно как раньше. */
+  view.className = tab==="ai" ? "wrap chatMode" : "wrap";
   /* Круглая кнопка показывается только там, где нажать больше нечего:
      в истории и в лимитах. На главной и в долгах кнопки операций уже на
      экране, в настройках и в чате она не нужна вовсе, а нижний правый угол
@@ -1005,7 +1038,11 @@ function opMeta(o){
     m.sub="Должен: "+(o.person||"—")+" · "+(acc? FIN.nameOfAccount(state.config,o.account) : "без счёта");
   }
   else if(o.type==="repay"){ m.ico="✓"; m.title="Отдал долг"; m.cls="neg"; m.amt="−"+money(a); m.sub=(o.person||"—")+" · "+FIN.nameOfAccount(state.config,o.account); }
-  else if(o.type==="lend"){ m.ico="↗"; m.title="Дал в долг"; m.cls="neg"; m.amt="−"+money(a); m.sub=(o.person||"—")+" · "+FIN.nameOfAccount(state.config,o.account); }
+  else if(o.type==="lend"){
+    var lacc = !!o.account;
+    m.ico="↗"; m.title="Дал в долг"; m.cls=lacc?"neg":""; m.amt=(lacc?"−":"")+money(a);
+    m.sub=(o.person||"—")+" · "+(lacc? FIN.nameOfAccount(state.config,o.account) : "без счёта");
+  }
   else if(o.type==="collect"){ m.ico="↙"; m.title="Мне вернули"; m.cls="pos"; m.amt="+"+money(a); m.sub=(o.person||"—")+" · "+FIN.nameOfAccount(state.config,o.account); }
   if(o.note) m.sub += " · "+o.note;
   return m;
@@ -1435,6 +1472,14 @@ function sheetTransfer(ex){
 
 /* Список людей для фишек. amounts подписывает под именем текущий остаток
    обязательства, чтобы не пришлось уходить на вкладку Долги и возвращаться. */
+/* К списку счетов добавляется пустой вариант. Им записывают долг, который
+   возник раньше: деньги по нему уже получены или отданы, сегодняшний баланс
+   трогать нельзя. Пустой id это ровно то состояние, в котором лежат долги,
+   записанные до того, как долг стал двигать деньги. */
+function accountsOrNone(){
+  return state.config.accounts.concat([{id:"", name:"не трогать баланс", icon:"∅"}]);
+}
+
 function peopleChips(o, icon, amountOf){
   var names = state.config.people.slice();
   if(o && o.person && names.indexOf(o.person)<0) names.push(o.person);
@@ -1450,9 +1495,10 @@ function sheetDebt(ex){
   if(!state.config.accounts.length){ toast("Нет ни одного счёта"); return; }
   var body = amtField(o)+
     '<label class="f">У кого взял</label>'+chipsHTML(people,"per", o.person||people[0].id)+
-    '<label class="f">Куда положил</label>'+chipsHTML(state.config.accounts,"acc", o.account||state.config.accounts[0].id)+
+    '<label class="f">Куда положил</label>'+chipsHTML(accountsOrNone(),"acc", ex? (o.account||"") : state.config.accounts[0].id)+
     noteField(o)+
     '<div class="hint">Деньги придут на выбранный счёт, и появится долг перед этим человеком. Когда будешь отдавать, запиши Отдал долг, отдельный расход создавать не надо.</div>'+
+    '<div class="hint">Записываешь давний долг, который взял до кошелька и уже потратил, выбери не трогать баланс. Тогда долг появится, а счета останутся как есть.</div>'+
     '<div class="rowBtns"><button class="btn" id="save">'+(ex?"Сохранить":"Записать долг")+'</button></div>'+delBtn(ex);
   openSheet(ex?"Правка долга":"Взял в долг", body, function(root){
     wireChips(root); focusAmount(root);
@@ -1472,9 +1518,10 @@ function sheetLend(ex){
   if(!state.config.accounts.length){ toast("Нет ни одного счёта"); return; }
   var body = amtField(o)+
     '<label class="f">Кому дал</label>'+chipsHTML(people,"per", o.person||people[0].id)+
-    '<label class="f">С какого счёта</label>'+chipsHTML(state.config.accounts,"acc", o.account||state.config.accounts[0].id)+
+    '<label class="f">С какого счёта</label>'+chipsHTML(accountsOrNone(),"acc", ex? (o.account||"") : state.config.accounts[0].id)+
     noteField(o)+
     '<div class="hint">Деньги уйдут со счёта, но это не расход: они вернутся. В отчёте за период такие суммы идут отдельной строкой, а не в тратах.</div>'+
+    '<div class="hint">Давал давно, ещё до кошелька, выбери не трогать баланс. Появится только запись о том, что тебе должны.</div>'+
     '<div class="rowBtns"><button class="btn" id="save">'+(ex?"Сохранить":"Записать")+'</button></div>'+delBtn(ex);
   openSheet(ex?"Правка займа":"Дал в долг", body, function(root){
     wireChips(root); focusAmount(root);
