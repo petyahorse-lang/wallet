@@ -936,10 +936,12 @@ function render(){
   var btns = document.querySelectorAll("#tabs button");
   for(var i=0;i<btns.length;i++) btns[i].setAttribute("aria-current", String(btns[i].dataset.tab===tab));
   paintSync();
-  /* На главной крупные кнопки уже на экране, круглая кнопка там только
-     перекрывала бы суммы в списке. На остальных вкладках она нужна. */
+  /* Круглая кнопка показывается только там, где нажать больше нечего:
+     в истории и в лимитах. На главной и в долгах кнопки операций уже на
+     экране, в настройках и в чате она не нужна вовсе, а нижний правый угол
+     занимает: перекрывает текст и налезает на вкладку Ещё. */
   var fab = document.getElementById("fab");
-  if(fab) fab.hidden = (tab==="home" || tab==="ai");
+  if(fab) fab.hidden = (tab!=="hist" && tab!=="stat");
   if(tab==="home") renderHome();
   else if(tab==="hist") renderHist();
   else if(tab==="stat") renderStat();
@@ -978,8 +980,10 @@ function renderHome(){
   h += '<div class="actions">'+
     '<button class="act" data-act="income"><b>＋</b>Доход</button>'+
     '<button class="act" data-act="transfer"><b>⇄</b>Перевод</button>'+
-    '<button class="act" data-act="debt"><b>◷</b>Долг</button>'+
-    '<button class="act" data-act="repay"><b>✓</b>Возврат</button></div>';
+    '<button class="act" data-act="debt"><b>◷</b>Взял в долг</button>'+
+    '<button class="act" data-act="repay"><b>✓</b>Отдал долг</button>'+
+    '<button class="act" data-act="lend"><b>↗</b>Дал в долг</button>'+
+    '<button class="act" data-act="collect"><b>↙</b>Мне вернули</button></div>';
   h += '<div class="sect"><h2 class="sh">Последние операции</h2><div class="card">';
   h += last.length? last.map(opRowHTML).join("") : '<div class="empty"><b>Пока пусто</b>Нажми Записать расход или плюс внизу справа.</div>';
   h += '</div>';
@@ -993,8 +997,16 @@ function opMeta(o){
   if(o.type==="income"){ var c=catObj(o.category,true); m.ico=c.icon; m.title=c.name; m.cls="pos"; m.amt="+"+money(a); m.sub=accIcon(o.account)+" "+FIN.nameOfAccount(state.config,o.account); }
   else if(o.type==="expense"){ var c2=catObj(o.category,false); m.ico=c2.icon; m.title=c2.name; m.cls="neg"; m.amt="−"+money(a); m.sub=accIcon(o.account)+" "+FIN.nameOfAccount(state.config,o.account); }
   else if(o.type==="transfer"){ m.ico="⇄"; m.title="Перевод"; m.amt=money(a); m.sub=FIN.nameOfAccount(state.config,o.account)+" → "+FIN.nameOfAccount(state.config,o.toAccount); }
-  else if(o.type==="debt"){ m.ico="◷"; m.title="Новый долг"; m.amt=money(a); m.sub="Должен: "+(o.person||"—"); }
-  else if(o.type==="repay"){ m.ico="✓"; m.title="Погашение долга"; m.cls="neg"; m.amt="−"+money(a); m.sub=(o.person||"—")+" · "+FIN.nameOfAccount(state.config,o.account); }
+  else if(o.type==="debt"){
+    /* Долги без счёта записаны до того, как долг стал двигать деньги.
+       Показываем их без знака: знак означал бы движение, которого не было. */
+    var acc = !!o.account;
+    m.ico="◷"; m.title="Взял в долг"; m.cls=acc?"pos":""; m.amt=(acc?"+":"")+money(a);
+    m.sub="Должен: "+(o.person||"—")+" · "+(acc? FIN.nameOfAccount(state.config,o.account) : "без счёта");
+  }
+  else if(o.type==="repay"){ m.ico="✓"; m.title="Отдал долг"; m.cls="neg"; m.amt="−"+money(a); m.sub=(o.person||"—")+" · "+FIN.nameOfAccount(state.config,o.account); }
+  else if(o.type==="lend"){ m.ico="↗"; m.title="Дал в долг"; m.cls="neg"; m.amt="−"+money(a); m.sub=(o.person||"—")+" · "+FIN.nameOfAccount(state.config,o.account); }
+  else if(o.type==="collect"){ m.ico="↙"; m.title="Мне вернули"; m.cls="pos"; m.amt="+"+money(a); m.sub=(o.person||"—")+" · "+FIN.nameOfAccount(state.config,o.account); }
   if(o.note) m.sub += " · "+o.note;
   return m;
 }
@@ -1016,7 +1028,7 @@ function dayLabel(ts){
 
 function matches(o){
   if(histFilter!=="all"){
-    if(histFilter==="debts"){ if(o.type!=="debt" && o.type!=="repay") return false; }
+    if(histFilter==="debts"){ if(["debt","repay","lend","collect"].indexOf(o.type)<0) return false; }
     else if(o.type!==histFilter) return false;
   }
   if(!search) return true;
@@ -1101,6 +1113,14 @@ function renderStat(){
     '<div class="statCell"><div class="k">Расходы</div><div class="v" style="color:var(--neg)">'+esc(money(st.expense))+'</div></div>'+
     '<div class="statCell"><div class="k">Разница</div><div class="v">'+esc(money(st.diff))+'</div></div>'+
     '<div class="statCell"><div class="k">Операций</div><div class="v">'+st.count+'</div></div></div>';
+  /* Долговые движения показываются отдельно и только когда они были:
+     это не доходы и не траты, складывать их с ними нельзя. */
+  if(st.debtIn>0 || st.debtOut>0){
+    h += '<div class="statGrid" style="margin-top:1px">'+
+      '<div class="statCell"><div class="k">По долгам пришло</div><div class="v" style="color:var(--pos)">'+esc(money(st.debtIn))+'</div></div>'+
+      '<div class="statCell"><div class="k">По долгам ушло</div><div class="v" style="color:var(--neg)">'+esc(money(st.debtOut))+'</div></div></div>'+
+      '<div class="hint">Взятое и возвращённое тебе, отданное и одолженное. В доходы и расходы выше не входит.</div>';
+  }
 
   h += '<div class="sect"><h2 class="sh">Расходы по категориям</h2><div class="card">';
   if(!cats.length) h += '<div class="empty">За этот период расходов нет.</div>';
@@ -1140,21 +1160,44 @@ function renderLimits(){
 }
 
 function renderDebt(){
-  var rows = FIN.debtBreakdown(state.config, ops()).filter(function(r){ return r.listed || r.amount!==0; });
-  var h = '<div class="card" style="padding:14px"><div class="eyebrow">Всего должен</div>'+
-    '<div style="font-family:var(--f-display); font-size:28px; font-weight:800; font-variant-numeric:tabular-nums; margin-top:2px">'+esc(fmt(FIN.totalDebt(state.config, ops())))+'</div></div>';
-  h += '<div class="sect"><h2 class="sh">Кому</h2><div class="card">';
-  if(!rows.length) h += '<div class="empty"><b>Список пуст</b>Добавь человека на вкладке Ещё.</div>';
-  else rows.forEach(function(r){
-    h += '<div class="accRow"><div class="accIco">◷</div><div class="accName">'+esc(r.person)+
-      '<div class="opSub">'+(r.amount>0? "остаток долга" : r.amount<0? "переплата" : "закрыт")+'</div></div>'+
-      '<div class="accVal" style="color:'+(r.amount>0?"var(--neg)":"var(--muted)")+'">'+esc(fmt(r.amount))+'</div></div>';
-  });
-  h += '</div></div>';
-  h += '<div class="actions"><button class="act primary" data-act="debt"><b>＋</b>Добавить долг</button>'+
-       '<button class="act" data-act="repay"><b>✓</b>Погасить</button></div>';
-  h += '<div class="hint">Новый долг не трогает деньги, он фиксирует обязательство. Погашение одной операцией списывает сумму со счёта и уменьшает долг перед конкретным человеком. Частичное погашение просто делается несколько раз.</div>';
+  var all = ops();
+  var iOwe = FIN.totalDebt(state.config, all), owedMe = FIN.totalClaims(state.config, all);
+  var mine = FIN.debtBreakdown(state.config, all).filter(function(r){ return r.amount!==0; });
+  var theirs = FIN.claimBreakdown(state.config, all).filter(function(r){ return r.amount!==0; });
+  var net = FIN.r2(owedMe - iOwe);
+
+  var h = '<div class="sum2">'+
+    '<div><div class="k">Я должен</div><div class="v" style="color:var(--neg)">'+esc(money(iOwe))+'</div></div>'+
+    '<div><div class="k">Мне должны</div><div class="v" style="color:var(--pos)">'+esc(money(owedMe))+'</div></div></div>';
+  h += '<div class="card" style="padding:14px"><div class="eyebrow">Итог по долгам</div>'+
+    '<div style="font-family:var(--f-display); font-size:28px; font-weight:800; font-variant-numeric:tabular-nums; margin-top:2px; color:'+
+    (net>0?"var(--pos)":net<0?"var(--neg)":"inherit")+'">'+esc(fmt(net))+'</div>'+
+    '<div class="hint" style="margin-top:4px">'+
+    (net>0? "столько тебе должны сверх того, что должен ты" : net<0? "на столько ты должен больше, чем должны тебе" : "долги сходятся")+
+    '</div></div>';
+
+  h += debtSection("Я должен", mine, "◷", "остаток долга", "переплата", "var(--neg)");
+  h += debtSection("Мне должны", theirs, "↗", "ещё не вернули", "вернули лишнего", "var(--pos)");
+
+  h += '<div class="actions">'+
+    '<button class="act" data-act="debt"><b>◷</b>Взял в долг</button>'+
+    '<button class="act" data-act="repay"><b>✓</b>Отдал долг</button>'+
+    '<button class="act" data-act="lend"><b>↗</b>Дал в долг</button>'+
+    '<button class="act" data-act="collect"><b>↙</b>Мне вернули</button></div>';
+  h += '<div class="hint">Все четыре операции двигают деньги на счёте: взял и вернули приносят, отдал и дал уносят. Отдельный расход или доход рядом создавать не надо, иначе сумма посчитается дважды. Отдавать и получать можно частями, сколько угодно раз.</div>';
   view.innerHTML = h;
+}
+
+/* Один и тот же список для обеих сторон: отличаются только подписи. */
+function debtSection(title, rows, icon, wordOpen, wordOver, color){
+  var h = '<div class="sect"><h2 class="sh">'+esc(title)+'</h2><div class="card">';
+  if(!rows.length) h += '<div class="empty">Здесь пусто.</div>';
+  else rows.forEach(function(r){
+    h += '<div class="accRow"><div class="accIco">'+esc(icon)+'</div><div class="accName">'+esc(r.person)+
+      '<div class="opSub">'+esc(r.amount>0? wordOpen : wordOver)+(r.listed? "" : " · убран из списка")+'</div></div>'+
+      '<div class="accVal" style="color:'+(r.amount>0?color:"var(--muted)")+'">'+esc(fmt(r.amount))+'</div></div>';
+  });
+  return h + '</div></div>';
 }
 
 function renderMore(){
@@ -1324,10 +1367,12 @@ function focusAmount(root){
 function sheetQuickAdd(){
   var rows = [
     ["expense", "−",  "Расход",  "покупка, услуга, поездка", true],
-    ["income",  "＋", "Доход",   "зарплата, подарок, возврат от кого-то", false],
+    ["income",  "＋", "Доход",   "зарплата, подарок", false],
     ["transfer","⇄",  "Перевод", "между своими счетами, баланс не меняется", false],
-    ["debt",    "◷",  "Долг",    "взял в долг, деньги не двигаются", false],
-    ["repay",   "✓",  "Возврат долга", "отдал долг со счёта", false]
+    ["debt",    "◷",  "Взял в долг",  "деньги пришли, ты теперь должен", false],
+    ["repay",   "✓",  "Отдал долг",   "деньги ушли, твой долг уменьшился", false],
+    ["lend",    "↗",  "Дал в долг",   "деньги ушли, теперь должны тебе", false],
+    ["collect", "↙",  "Мне вернули",  "деньги пришли, тебе должны меньше", false]
   ];
   openSheet("Что записываем", '<div class="pickList">'+rows.map(function(r){
     return '<button class="pick'+(r[4]?" primary":"")+'" data-pick="'+r[0]+'">'+
@@ -1340,6 +1385,8 @@ function sheetQuickAdd(){
       else if(kind==="transfer") sheetTransfer();
       else if(kind==="debt") sheetDebt();
       else if(kind==="repay") sheetRepay();
+      else if(kind==="lend") sheetLend();
+      else if(kind==="collect") sheetCollect();
     });
   });
 }
@@ -1386,22 +1433,77 @@ function sheetTransfer(ex){
   });
 }
 
+/* Список людей для фишек. amounts подписывает под именем текущий остаток
+   обязательства, чтобы не пришлось уходить на вкладку Долги и возвращаться. */
+function peopleChips(o, icon, amountOf){
+  var names = state.config.people.slice();
+  if(o && o.person && names.indexOf(o.person)<0) names.push(o.person);
+  return names.map(function(p){
+    return {id:p, name: amountOf? p+" · "+money(amountOf(p)) : p, icon:icon};
+  });
+}
+
 function sheetDebt(ex){
   var o = ex||{};
-  var people = state.config.people.map(function(p){ return {id:p, name:p, icon:"◷"}; });
-  if(!people.length && !o.person){ toast("Сначала добавь человека на вкладке Ещё"); return; }
-  if(o.person && !state.config.people.includes(o.person)) people = people.concat([{id:o.person,name:o.person,icon:"◷"}]);
+  var people = peopleChips(o, "◷", null);
+  if(!people.length){ toast("Сначала добавь человека на вкладке Ещё"); return; }
+  if(!state.config.accounts.length){ toast("Нет ни одного счёта"); return; }
   var body = amtField(o)+
-    '<label class="f">Кому должен</label>'+chipsHTML(people,"per", o.person||people[0].id)+
+    '<label class="f">У кого взял</label>'+chipsHTML(people,"per", o.person||people[0].id)+
+    '<label class="f">Куда положил</label>'+chipsHTML(state.config.accounts,"acc", o.account||state.config.accounts[0].id)+
     noteField(o)+
-    '<div class="hint">Деньги на счетах не изменятся, фиксируется только обязательство.</div>'+
+    '<div class="hint">Деньги придут на выбранный счёт, и появится долг перед этим человеком. Когда будешь отдавать, запиши Отдал долг, отдельный расход создавать не надо.</div>'+
     '<div class="rowBtns"><button class="btn" id="save">'+(ex?"Сохранить":"Записать долг")+'</button></div>'+delBtn(ex);
-  openSheet(ex?"Правка долга":"Новый долг", body, function(root){
+  openSheet(ex?"Правка долга":"Взял в долг", body, function(root){
     wireChips(root); focusAmount(root);
     root.querySelector("#save").addEventListener("click", function(){
       var a = readAmt(root); if(a===null) return;
-      var patch = {amount:a, person:chipVal(root,"per"), note:root.querySelector("#note").value.trim()};
-      commit(ex, {type:"debt", account:"", toAccount:"", category:""}, patch, "Долг записан");
+      var patch = {amount:a, person:chipVal(root,"per"), account:chipVal(root,"acc"), note:root.querySelector("#note").value.trim()};
+      commit(ex, {type:"debt", toAccount:"", category:""}, patch, "Долг записан");
+    });
+    wireDel(root, ex);
+  });
+}
+
+function sheetLend(ex){
+  var o = ex||{};
+  var people = peopleChips(o, "↗", null);
+  if(!people.length){ toast("Сначала добавь человека на вкладке Ещё"); return; }
+  if(!state.config.accounts.length){ toast("Нет ни одного счёта"); return; }
+  var body = amtField(o)+
+    '<label class="f">Кому дал</label>'+chipsHTML(people,"per", o.person||people[0].id)+
+    '<label class="f">С какого счёта</label>'+chipsHTML(state.config.accounts,"acc", o.account||state.config.accounts[0].id)+
+    noteField(o)+
+    '<div class="hint">Деньги уйдут со счёта, но это не расход: они вернутся. В отчёте за период такие суммы идут отдельной строкой, а не в тратах.</div>'+
+    '<div class="rowBtns"><button class="btn" id="save">'+(ex?"Сохранить":"Записать")+'</button></div>'+delBtn(ex);
+  openSheet(ex?"Правка займа":"Дал в долг", body, function(root){
+    wireChips(root); focusAmount(root);
+    root.querySelector("#save").addEventListener("click", function(){
+      var a = readAmt(root); if(a===null) return;
+      var patch = {amount:a, person:chipVal(root,"per"), account:chipVal(root,"acc"), note:root.querySelector("#note").value.trim()};
+      commit(ex, {type:"lend", toAccount:"", category:""}, patch, "Записано, теперь должны тебе");
+    });
+    wireDel(root, ex);
+  });
+}
+
+function sheetCollect(ex){
+  var o = ex||{};
+  var people = peopleChips(o, "↙", function(p){ return FIN.claimFor(ops(), p, null, state.config); });
+  if(!people.length){ toast("Сначала добавь человека на вкладке Ещё"); return; }
+  if(!state.config.accounts.length){ toast("Нет ни одного счёта"); return; }
+  var body = amtField(o)+
+    '<label class="f">Кто вернул</label>'+chipsHTML(people,"per", o.person||people[0].id)+
+    '<label class="f">На какой счёт</label>'+chipsHTML(state.config.accounts,"acc", o.account||state.config.accounts[0].id)+
+    noteField(o)+
+    '<div class="hint">Деньги придут на счёт и долг этого человека перед тобой уменьшится. Это не доход: тебе вернули твоё. Частями можно сколько угодно раз.</div>'+
+    '<div class="rowBtns"><button class="btn" id="save">'+(ex?"Сохранить":"Записать возврат")+'</button></div>'+delBtn(ex);
+  openSheet(ex?"Правка возврата":"Мне вернули долг", body, function(root){
+    wireChips(root); focusAmount(root);
+    root.querySelector("#save").addEventListener("click", function(){
+      var a = readAmt(root); if(a===null) return;
+      var patch = {amount:a, person:chipVal(root,"per"), account:chipVal(root,"acc"), note:root.querySelector("#note").value.trim()};
+      commit(ex, {type:"collect", toAccount:"", category:""}, patch, "Возврат записан");
     });
     wireDel(root, ex);
   });
@@ -1418,6 +1520,7 @@ function sheetRepay(ex){
     '<label class="f">С какого счёта</label>'+chipsHTML(state.config.accounts,"acc", o.account||state.config.accounts[0].id)+
     noteField(o)+
     '<div class="hint">Одна операция: деньги уходят со счёта и долг перед этим человеком уменьшается. Отдельный расход создавать не нужно, иначе спишется дважды.</div>'+
+    '<div class="hint">Если это ты дал в долг и тебе возвращают, нужна другая кнопка: Мне вернули.</div>'+
     '<div class="rowBtns"><button class="btn" id="save">'+(ex?"Сохранить":"Погасить")+'</button></div>'+delBtn(ex);
   openSheet(ex?"Правка погашения":"Погашение долга", body, function(root){
     wireChips(root); focusAmount(root);
@@ -1496,6 +1599,8 @@ function openOp(id){
   else if(o.type==="transfer") sheetTransfer(o);
   else if(o.type==="debt") sheetDebt(o);
   else if(o.type==="repay") sheetRepay(o);
+  else if(o.type==="lend") sheetLend(o);
+  else if(o.type==="collect") sheetCollect(o);
 }
 
 /* ---------- выгрузка ---------- */
@@ -1579,7 +1684,8 @@ view.addEventListener("click", function(e){
   var rmp = e.target.closest("[data-rmperson]");
   if(rmp){
     var name = state.config.people[Number(rmp.dataset.rmperson)];
-    if(Math.abs(FIN.debtFor(ops(), name, null, state.config))>0.001){ toast("Сначала закрой долг этого человека"); return; }
+    if(Math.abs(FIN.debtFor(ops(), name, null, state.config))>0.001){ toast("Сначала закрой свой долг перед этим человеком"); return; }
+    if(Math.abs(FIN.claimFor(ops(), name, null, state.config))>0.001){ toast("Этот человек ещё должен тебе"); return; }
     state.config.people = state.config.people.filter(function(_,i){ return i!==Number(rmp.dataset.rmperson); });
     markConfig(); render(); return;
   }
@@ -1600,6 +1706,8 @@ view.addEventListener("click", function(e){
   else if(act==="transfer") sheetTransfer();
   else if(act==="debt") sheetDebt();
   else if(act==="repay") sheetRepay();
+  else if(act==="lend") sheetLend();
+  else if(act==="collect") sheetCollect();
   else if(act==="setup") sheetSetup();
   else if(act==="goHist"){ tab="hist"; render(); }
   else if(act==="goMore"){ tab="more"; render(); }
@@ -1652,6 +1760,8 @@ function handleHash(){
   else if(h==="transfer") sheetTransfer();
   else if(h==="debt") sheetDebt();
   else if(h==="repay") sheetRepay();
+  else if(h==="lend") sheetLend();
+  else if(h==="collect") sheetCollect();
   else if(h==="stat"){ tab="stat"; render(); }
   else if(h==="debts"){ tab="debt"; render(); }
 }

@@ -1,6 +1,11 @@
 /* Кошелёк BYN — расчётное ядро.
    Чистые функции без DOM: балансы, долги, статистика, экспорт, валидация.
 
+   Долги ведутся с двух сторон и двумя раздельными реестрами: сколько я
+   должен людям (debt и repay) и сколько люди должны мне (lend и collect).
+   Все четыре операции двигают деньги на счёте, поэтому баланс показывает
+   наличное, а не причитающееся.
+
    Два уровня защиты:
    1. validateOp не даёт создать некорректную операцию и объясняет причину.
    2. effects и debtEffect считают некорректную запись инертной: если она
@@ -9,7 +14,7 @@
 (function (root) {
   "use strict";
 
-  var TYPES = ["income", "expense", "transfer", "debt", "repay"];
+  var TYPES = ["income", "expense", "transfer", "debt", "repay", "lend", "collect"];
   var EPS = 0.005;
   var MIN = 0.01;                                  // копейка, минимальная сумма операции
 
@@ -45,16 +50,26 @@
 
   /* Денежные эффекты операции: [{account, delta}].
      ids — набор существующих счетов; без него проверка счетов не делается.
-     Долг (debt) денег не трогает. Погашение (repay) списывает один раз. */
+
+     Долги двигают деньги в обе стороны и оба раза: взял в долг деньги
+     пришли, отдал ушли, дал в долг ушли, вернули пришли. Так баланс
+     всегда показывает то, что реально на руках, а не то, что причитается.
+
+     Исключение ради совместимости: у долгов, записанных до появления
+     счёта у этого типа, поля account нет. Для них known даёт false,
+     список эффектов пустой, и старые балансы не съезжают задним числом. */
   function effects(op, ids) {
     if (!op) return [];
     var a = amountOf(op);
     if (!(a > 0)) return [];                       // ноль и отрицательное инертны
     switch (op.type) {
       case "income":
+      case "debt":                                 // взял в долг: деньги пришли
+      case "collect":                              // мне вернули: деньги пришли
         return known(ids, op.account) ? [{ account: op.account, delta: a }] : [];
       case "expense":
       case "repay":
+      case "lend":                                 // дал в долг: деньги ушли
         return known(ids, op.account) ? [{ account: op.account, delta: -a }] : [];
       case "transfer":
         if (op.account === op.toAccount) return [];
@@ -65,13 +80,27 @@
     }
   }
 
-  /* Эффект операции на долг перед человеком: + взял в долг, − отдал. */
+  /* Эффект операции на долг ПЕРЕД человеком: + взял в долг, − отдал. */
   function debtEffect(op) {
     if (!op || !op.person) return 0;
     var a = amountOf(op);
     if (!(a > 0)) return 0;
     if (op.type === "debt") return a;
     if (op.type === "repay") return -a;
+    return 0;
+  }
+
+  /* Эффект операции на долг ЧЕЛОВЕКА передо мной: + дал в долг, − вернули.
+     Два реестра держатся раздельно намеренно. Если сложить их в один со
+     знаком, взаимозачёт произойдёт сам собой: человек, которому ты должен
+     сто и который должен тебе сто, покажется рассчитавшимся, хотя это два
+     разных обязательства и закрывать их можно в любом порядке. */
+  function claimEffect(op) {
+    if (!op || !op.person) return 0;
+    var a = amountOf(op);
+    if (!(a > 0)) return 0;
+    if (op.type === "lend") return a;
+    if (op.type === "collect") return -a;
     return 0;
   }
 
@@ -108,7 +137,7 @@
      сам решает, есть ли у него справочник счетов. */
   function rejectedIds(ops, config) {
     var ids = config ? accountIds(config) : null;
-    var owed = Object.create(null), bad = Object.create(null);
+    var owed = Object.create(null), lent = Object.create(null), bad = Object.create(null);
     (ops || []).slice().sort(function (a, b) {
       var x = tsMs(a), y = tsMs(b);                // битые даты уходят в конец
       if (!isFinite(x)) x = Infinity;
@@ -132,7 +161,24 @@
       }
       if (op.type === "debt") {
         if (!op.person) { bad[op.id] = true; return; }
+        /* Счёт у взятого долга появился позже самого типа. Записи без
+           счёта остаются рабочими и просто не двигают деньги: иначе вся
+           прошлая история долгов разом стала бы нерабочей. Для новых и
+           отредактированных счёт обязателен, за этим следит validateOp. */
+        if (op.account && !known(ids, op.account)) { bad[op.id] = true; return; }
         owed[op.person] = r2((owed[op.person] || 0) + a);
+        return;
+      }
+      if (op.type === "lend") {
+        if (!op.person || !known(ids, op.account)) { bad[op.id] = true; return; }
+        lent[op.person] = r2((lent[op.person] || 0) + a);
+        return;
+      }
+      if (op.type === "collect") {
+        if (!op.person || !known(ids, op.account)) { bad[op.id] = true; return; }
+        var back = r2(lent[op.person] || 0);
+        if (back <= EPS || a > back + EPS) { bad[op.id] = true; return; }
+        lent[op.person] = r2(back - a);
         return;
       }
       /* repay */
@@ -176,19 +222,55 @@
     return r2(v);
   }
 
+  /* Сумма только незакрытых долгов: переплата по одному человеку не должна
+     уменьшать долг перед другим, это разные обязательства. */
   function totalDebt(config, ops) {
-    return r2(((config && config.people) || []).reduce(function (s, p) {
+    return r2(peopleOf(config, ops).reduce(function (s, p) {
       return s + Math.max(0, debtFor(ops, p, null, config));
     }, 0));
   }
 
-  /* Незакрытые долги по всем людям, включая тех, кого убрали из списка. */
-  function debtBreakdown(config, ops) {
+  /* Сколько человек должен мне. exceptId работает так же, как в debtFor. */
+  function claimFor(ops, person, exceptId, config) {
+    var bad = rejectedIds(ops, config);
+    var v = 0;
+    (ops || []).forEach(function (op) {
+      if (op.person !== person) return;
+      if (exceptId && op.id === exceptId) return;
+      if (bad[op.id]) return;
+      v += claimEffect(op);
+    });
+    return r2(v);
+  }
+
+  function totalClaims(config, ops) {
+    return r2(peopleOf(config, ops).reduce(function (s, p) {
+      return s + Math.max(0, claimFor(ops, p, null, config));
+    }, 0));
+  }
+
+  /* Все люди, о которых вообще есть что сказать: и записанные в настройках,
+     и те, кого оттуда убрали, но чьи операции остались. */
+  function peopleOf(config, ops) {
     var names = {};
     (((config && config.people) || [])).forEach(function (p) { names[p] = true; });
     (ops || []).forEach(function (o) { if (o.person) names[o.person] = true; });
-    return Object.keys(names).map(function (p) {
-      return { person: p, amount: debtFor(ops, p, null, config), listed: ((config && config.people) || []).indexOf(p) >= 0 };
+    return Object.keys(names);
+  }
+
+  /* Незакрытые долги по всем людям, включая тех, кого убрали из списка. */
+  function debtBreakdown(config, ops) {
+    var listed = (config && config.people) || [];
+    return peopleOf(config, ops).map(function (p) {
+      return { person: p, amount: debtFor(ops, p, null, config), listed: listed.indexOf(p) >= 0 };
+    }).sort(function (a, b) { return b.amount - a.amount; });
+  }
+
+  /* То же самое, но про деньги, которые должны мне. */
+  function claimBreakdown(config, ops) {
+    var listed = (config && config.people) || [];
+    return peopleOf(config, ops).map(function (p) {
+      return { person: p, amount: claimFor(ops, p, null, config), listed: listed.indexOf(p) >= 0 };
     }).sort(function (a, b) { return b.amount - a.amount; });
   }
 
@@ -212,7 +294,8 @@
     if (r2(a) !== a) return bad("Сумма указывается с точностью до копейки");
     var ids = accountIds(config);
 
-    if (op.type === "income" || op.type === "expense" || op.type === "repay") {
+    if (op.type === "income" || op.type === "expense" || op.type === "repay" ||
+        op.type === "debt" || op.type === "lend" || op.type === "collect") {
       if (!known(ids, op.account)) return bad("Выбери существующий счёт");
     }
     if (op.type === "transfer") {
@@ -220,7 +303,7 @@
       if (!known(ids, op.toAccount)) return bad("Счёт зачисления не существует");
       if (op.account === op.toAccount) return bad("Счета перевода должны быть разными");
     }
-    if (op.type === "debt" || op.type === "repay") {
+    if (op.type === "debt" || op.type === "repay" || op.type === "lend" || op.type === "collect") {
       if (!op.person) return bad("Выбери человека");
     }
     if (op.type === "repay") {
@@ -228,12 +311,22 @@
       if (owed <= EPS) return bad("Этому человеку ты ничего не должен");
       if (r2(a) > r2(owed) + EPS) return bad("Нельзя погасить больше, чем текущий долг: " + plain(owed) + " BYN");
     }
+    if (op.type === "collect") {
+      var mine = claimFor(ops, op.person, op.id, config);
+      if (mine <= EPS) return bad("Этот человек тебе ничего не должен");
+      if (r2(a) > r2(mine) + EPS) return bad("Нельзя вернуть больше, чем тебе должны: " + plain(mine) + " BYN");
+    }
     return { ok: true };
   }
 
+  /* Отчёт за период. Долговые операции сознательно не попадают ни в доходы,
+     ни в расходы: взятые в долг деньги не заработок, а отданные и одолженные
+     не трата, они вернутся. Иначе одолженная другу сотня навсегда осела бы в
+     расходах месяца. Для них отдельная пара чисел debtIn и debtOut. */
   function periodStats(ops, fromTs, config) {
     var bad = rejectedIds(ops, config);
-    var inc = 0, exp = 0, count = 0, byCat = {};
+    var ids = config ? accountIds(config) : null;
+    var inc = 0, exp = 0, dIn = 0, dOut = 0, count = 0, byCat = {};
     (ops || []).forEach(function (op) {
       if (bad[op.id]) return;
       if (new Date(op.ts).getTime() < fromTs) return;
@@ -242,9 +335,18 @@
       count++;
       if (op.type === "income") inc += a;
       else if (op.type === "expense") { exp += a; byCat[op.category || "other"] = r2((byCat[op.category || "other"] || 0) + a); }
-      else if (op.type === "repay") { exp += a; byCat.__debt = r2((byCat.__debt || 0) + a); }
+      else if (op.type === "repay" || op.type === "lend" || op.type === "debt" || op.type === "collect") {
+        /* Считаем не тип, а реально сдвинутые деньги: у долгов, записанных
+           до появления счёта, движения не было, и в эту пару они не идут. */
+        effects(op, ids).forEach(function (e) {
+          if (e.delta > 0) dIn += e.delta; else dOut -= e.delta;
+        });
+      }
     });
-    return { income: r2(inc), expense: r2(exp), diff: r2(inc - exp), count: count, byCat: byCat };
+    return {
+      income: r2(inc), expense: r2(exp), diff: r2(inc - exp), count: count, byCat: byCat,
+      debtIn: r2(dIn), debtOut: r2(dOut)
+    };
   }
 
   /* Только обычные расходы: погашения долгов в лимиты категорий не входят. */
@@ -294,22 +396,33 @@
       } else if (o.type === "repay") {
         rows.push([o.id, d, t, "Погашение", "Долги", safe(o.person), n, nameOfAccount(config, o.account), (-a).toFixed(2)].join(";"));
       } else if (o.type === "debt") {
-        rows.push([o.id, d, t, "Долг", "", safe(o.person), n, "", a.toFixed(2)].join(";"));
+        rows.push([o.id, d, t, "Взял в долг", "Долги", safe(o.person), n, nameOfAccount(config, o.account), a.toFixed(2)].join(";"));
+      } else if (o.type === "lend") {
+        rows.push([o.id, d, t, "Дал в долг", "Долги", safe(o.person), n, nameOfAccount(config, o.account), (-a).toFixed(2)].join(";"));
+      } else if (o.type === "collect") {
+        rows.push([o.id, d, t, "Мне вернули", "Долги", safe(o.person), n, nameOfAccount(config, o.account), a.toFixed(2)].join(";"));
       }
     });
     return rows.join("\n");
   }
 
+  var DEBT_TYPES = { debt: 1, repay: 1, lend: 1, collect: 1 };
+  var DEBT_TITLE = { debt: "Взял в долг", repay: "Отдал долг", lend: "Дал в долг", collect: "Мне вернули" };
+  /* Знак показывает движение обязательства, а не денег: плюс обязательство
+     возникло, минус закрылось. Столбец сторона говорит, чьё оно. */
   function csvDebts(ops, config) {
     var bad = rejectedIds(ops, config);
-    var rows = ["id;дата;время;тип;комментарий;человек;сумма"];
+    var rows = ["id;дата;время;тип;сторона;комментарий;человек;сумма"];
     (ops || []).slice().reverse().forEach(function (o) {
       if (bad[o.id]) return;
-      if (o.type !== "debt" && o.type !== "repay") return;
+      if (!DEBT_TYPES[o.type]) return;
       var a = amountOf(o);
       if (!(a > 0)) return;
-      rows.push([o.id, dateOf(o.ts), timeOf(o.ts), o.type === "debt" ? "Долг" : "Погашение",
-        safe(o.note), safe(o.person), (o.type === "debt" ? a : -a).toFixed(2)].join(";"));
+      var mine = o.type === "debt" || o.type === "repay";
+      var plus = o.type === "debt" || o.type === "lend";
+      rows.push([o.id, dateOf(o.ts), timeOf(o.ts), DEBT_TITLE[o.type],
+        mine ? "я должен" : "мне должны",
+        safe(o.note), safe(o.person), (plus ? a : -a).toFixed(2)].join(";"));
     });
     return rows.join("\n");
   }
@@ -334,9 +447,11 @@
 
   var FIN = {
     TYPES: TYPES, EPS: EPS, MIN: MIN, r2: r2, amountOf: amountOf, tsMs: tsMs, accountIds: accountIds,
-    effects: effects, debtEffect: debtEffect, rejectedIds: rejectedIds, dedupe: dedupe, flatten: flatten,
-    accountBalance: accountBalance, totalBalance: totalBalance,
+    effects: effects, debtEffect: debtEffect, claimEffect: claimEffect,
+    rejectedIds: rejectedIds, dedupe: dedupe, flatten: flatten,
+    accountBalance: accountBalance, totalBalance: totalBalance, peopleOf: peopleOf,
     debtFor: debtFor, totalDebt: totalDebt, debtBreakdown: debtBreakdown,
+    claimFor: claimFor, totalClaims: totalClaims, claimBreakdown: claimBreakdown,
     validateOp: validateOp, periodStats: periodStats, spentInCategory: spentInCategory,
     nameOfAccount: nameOfAccount, nameOfCategory: nameOfCategory,
     csvFinance: csvFinance, csvDebts: csvDebts, backup: backup, restore: restore

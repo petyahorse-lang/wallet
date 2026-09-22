@@ -98,8 +98,14 @@
       expense_categories: cfg.categories.map(function (c) { return { id: c.id, name: c.name }; }),
       income_categories: cfg.incomeCats.map(function (c) { return { id: c.id, name: c.name }; }),
       people: cfg.people.slice(),
+      /* Две стороны долга держатся раздельно: i_owe это сколько должен
+         человек я, owed_to_me сколько должны мне. Складывать их нельзя. */
       total_debt: FIN.totalDebt(cfg, all),
-      debts: FIN.debtBreakdown(cfg, all)
+      total_owed_to_me: FIN.totalClaims(cfg, all),
+      i_owe: FIN.debtBreakdown(cfg, all)
+        .filter(function (d) { return d.amount !== 0; })
+        .map(function (d) { return { person: d.person, amount: d.amount }; }),
+      owed_to_me: FIN.claimBreakdown(cfg, all)
         .filter(function (d) { return d.amount !== 0; })
         .map(function (d) { return { person: d.person, amount: d.amount }; }),
       limits: cfg.categories.filter(function (c) { return Number(cfg.limits[c.id]) > 0; })
@@ -190,7 +196,10 @@
       else return { out: { ok: false, error: "не указана категория, спроси у человека какую взять" } };
     }
     if (type === "repay") cand.category = "debt";
-    if ((type === "income" || type === "expense" || type === "repay" || type === "transfer") && !cand.account) {
+    /* Счёт нужен всем типам, кроме ничего не значащих исключений: у перевода
+       он же счёт списания, у всех четырёх долговых операций это счёт, куда
+       деньги пришли или откуда ушли. */
+    if (!cand.account) {
       if (cfg.accounts.length === 1) cand.account = cfg.accounts[0].id;
       else return { out: { ok: false, error: "не указан счёт, спроси у человека с какого счёта" } };
     }
@@ -226,13 +235,18 @@
   /* У ошибки функции текст лежит в теле ответа, а не в message: без этого
      на экране было бы бесполезное Edge Function returned a non-2xx status. */
   async function errorText(err) {
+    var ctx = err && err.context;
     try {
-      if (err && err.context && typeof err.context.json === "function") {
-        var body = await err.context.clone().json();
+      if (ctx && (typeof ctx.json === "function" || typeof ctx.clone === "function")) {
+        /* Тело ответа читается один раз, поэтому если копия доступна, берём
+           её. Полагаться на наличие обоих методов нельзя: форма объекта
+           ошибки менялась от версии к версии библиотеки. */
+        var src = typeof ctx.clone === "function" ? ctx.clone() : ctx;
+        var body = await src.json();
         if (body && body.error) return String(body.error);
       }
     } catch (e) {}
-    if (err && err.context && err.context.status === 404) return "функция ai ещё не развёрнута в Supabase";
+    if (ctx && ctx.status === 404) return "функция ai ещё не развёрнута в Supabase";
     return (err && err.message) ? err.message : "помощник не ответил";
   }
 
@@ -292,7 +306,7 @@
     "Сколько я потратил в этом месяце",
     "На что уходит больше всего денег",
     "Запиши 12,50 на еду с карты",
-    "Дай три совета по моему бюджету"
+    "Кто мне должен и сколько"
   ];
 
   function bubbles() {
