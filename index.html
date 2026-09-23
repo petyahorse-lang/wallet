@@ -15,11 +15,12 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Public+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
 <style>
-:root{ padding-top:env(safe-area-inset-top, 0px); color-scheme:light dark; }
-/* Безопасную зону снизу добавляет только панель вкладок, ниже по файлу.
-   Пока её учитывали и здесь, и там, она входила в разметку дважды: под
-   панелью оставалась белая полоса, а всё, что позиционируется от низа
-   экрана, промахивалось ровно на её высоту. */
+:root{ color-scheme:light dark; }
+/* Безопасные зоны учитываются по одному разу и каждая своим элементом:
+   верхняя внутри шапки, нижняя внутри панели вкладок. На уровне документа
+   их нет намеренно. Пока верхняя стояла здесь, она увеличивала высоту
+   страницы, а вырез закрашивался цветом фона, а не шапки; нижняя же
+   входила дважды, и под панелью оставалась белая полоса. */
 html,body{margin:0}
 img{max-width:100%}
 [hidden]{display:none!important}
@@ -52,11 +53,15 @@ img{max-width:100%}
   --shadow:0 1px 2px rgba(0,0,0,.45), 0 14px 30px -18px rgba(0,0,0,.75);
 }
 *{box-sizing:border-box}
-html,body{height:100%}
-/* Динамическая высота: в Сафари, открытом обычной вкладкой, адресная
-   строка то появляется, то прячется, и 100% отмеряет высоту без неё. */
-@supports (height: 100dvh){ html,body{height:100dvh} }
+html{height:100%}
+/* Высота страницы задаётся краями видимой области, а не единицами высоты.
+   На айфоне с приложением на главном экране страница бывает сдвинута вниз
+   на статусную строку, а 100% и 100dvh всё равно отмеряют весь экран:
+   низ уезжал за край, и панель вкладок обрезалась наполовину. Закреплённое
+   тело с inset 0 совпадает с видимой областью при любом сдвиге и заодно
+   следует за адресной строкой Сафари, когда она прячется. */
 body{
+  position:fixed; inset:0;
   margin:0; background:var(--bg); color:var(--ink);
   font-family:var(--f-body); font-size:15px; line-height:1.45;
   display:flex; flex-direction:column; overflow:hidden; -webkit-font-smoothing:antialiased;
@@ -65,7 +70,10 @@ button,input,select,textarea{font:inherit; color:inherit}
 button{cursor:pointer; background:none; border:none}
 :focus-visible{outline:2px solid var(--accent); outline-offset:2px; border-radius:8px}
 
-header.top{flex:none; padding:9px 14px 8px; background:var(--surface); border-bottom:1px solid var(--line-soft)}
+/* Вырез и челка это часть шапки, а не отдельная полоса над страницей:
+   отступ внутри неё, поэтому под статусной строкой продолжается цвет
+   шапки, а высота документа остаётся ровно высотой экрана. */
+header.top{flex:none; padding:calc(9px + env(safe-area-inset-top, 0px)) 14px 8px; background:var(--surface); border-bottom:1px solid var(--line-soft)}
 .topRow{display:flex; align-items:flex-start; justify-content:space-between; gap:10px}
 .eyebrow{font-size:11px; letter-spacing:.09em; text-transform:uppercase; color:var(--muted); font-weight:600}
 .total{font-family:var(--f-display); font-size:26px; font-weight:800; line-height:1.05; letter-spacing:-.02em; font-variant-numeric:tabular-nums; margin-top:1px}
@@ -77,7 +85,18 @@ header.top{flex:none; padding:9px 14px 8px; background:var(--surface); border-bo
 .pill.err{color:var(--neg); border-color:var(--neg)}
 .eye{font-size:12px; color:var(--muted); font-weight:600; min-height:32px; padding:6px 8px; margin:-6px -8px}
 
-main{flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch}
+/* min-height:0 обязателен для колонки flex: без него минимальный размер
+   элемента равен размеру содержимого, и длинный список распирал бы
+   контейнер вместо того, чтобы прокручиваться внутри него. Здесь это и
+   так работает, потому что overflow-y:auto сам обнуляет минимальный
+   размер, но полагаться на побочный эффект не стоит: уберут прокрутку,
+   и геометрия поедет молча. */
+/* flex:1 1 auto занимает всё, что осталось между шапкой и панелью.
+   min-height:0 обязателен: иначе минимальный размер элемента в колонке
+   flex равен размеру содержимого, и длинный список распирал бы страницу
+   вместо прокрутки внутри. Прокручивается только main, панель и шапка
+   стоят на месте. */
+main{flex:1 1 auto; min-height:0; overflow-y:auto; -webkit-overflow-scrolling:touch}
 /* Нижний отступ был рассчитан на плавающую кнопку, которой больше нет.
    Теперь это просто воздух в конце списка. */
 .wrap{padding:12px 14px 28px; display:flex; flex-direction:column; gap:12px; max-width:720px; margin:0 auto}
@@ -121,10 +140,15 @@ nav.tabs button[aria-current="true"]{color:var(--accent); border-top-color:var(-
 
 .card{background:var(--surface); border:1px solid var(--line-soft); border-radius:var(--r); box-shadow:var(--shadow)}
 .sect{display:flex; flex-direction:column; gap:8px}
+.sectHead{display:flex; align-items:baseline; justify-content:space-between; gap:10px}
+.sectSum{font-family:var(--f-num); font-size:15px; font-weight:600; font-variant-numeric:tabular-nums; white-space:nowrap}
 h2.sh{font-family:var(--f-display); font-size:12px; font-weight:600; letter-spacing:.06em; text-transform:uppercase; color:var(--muted); margin:0}
 .accRow{display:flex; align-items:center; gap:10px; min-height:48px; padding:9px 12px; border-bottom:1px solid var(--line-soft)}
 .accRow:last-child{border-bottom:none}
-.accIco{width:30px; height:30px; flex:none; border-radius:9px; background:var(--chip); display:grid; place-items:center; font-size:15px}
+/* Один размер контейнера для всех значков: в списке операций, в списке
+   счетов, в долгах и в настройках. Иначе эмодзи разной ширины выглядят
+   как разный набор. */
+.accIco{width:28px; height:28px; flex:none; border-radius:8px; background:var(--chip); display:grid; place-items:center; font-size:15px; line-height:1}
 .accName{flex:1; font-weight:500; line-height:1.25}
 .accVal{font-family:var(--f-num); font-weight:500; font-variant-numeric:tabular-nums; white-space:nowrap}
 
@@ -136,7 +160,7 @@ h2.sh{font-family:var(--f-display); font-size:12px; font-weight:600; letter-spac
 /* Строка операции: компактная, чтобы на экран влезало больше записей. */
 .opRow{display:flex; align-items:center; gap:10px; min-height:44px; padding:7px 12px; width:100%; border-bottom:1px solid var(--line-soft); text-align:left}
 .opRow:last-child{border-bottom:none}
-.opIco{width:28px; height:28px; flex:none; border-radius:8px; background:var(--chip); display:grid; place-items:center; font-size:15px}
+.opIco{width:28px; height:28px; flex:none; border-radius:8px; background:var(--chip); display:grid; place-items:center; font-size:15px; line-height:1}
 /* Межстрочный интервал внутри строки свой: у двух строк подряд общий
    1.45 из body давал почти сорок пикселей на один текст. */
 .opMid{flex:1; min-width:0; line-height:1.25}
@@ -295,9 +319,11 @@ var DEFAULT_CONFIG = {
     {id:"food",  name:"Еда",         icon:"🍔"},
     {id:"trans", name:"Транспорт",   icon:"🚌"},
     {id:"taxi",  name:"Такси",       icon:"🚕"},
+    {id:"fuel",  name:"Топливо",     icon:"⛽"},
+    {id:"shop",  name:"Покупки",     icon:"🛍️"},
     {id:"home",  name:"Жильё",       icon:"🏠"},
-    {id:"fun",   name:"Развлечения", icon:"🎮"},
     {id:"conn",  name:"Связь",       icon:"📱"},
+    {id:"fun",   name:"Развлечения", icon:"🎮"},
     {id:"heal",  name:"Здоровье",    icon:"💊"},
     {id:"misc",  name:"Прочее",      icon:"📦"}
   ],
@@ -333,7 +359,19 @@ function uid(){
   return Date.now().toString(36) + uid.seq.toString(36).padStart(2,"0") + Math.random().toString(36).slice(2,6);
 }
 function monthKey(ts){ var d=new Date(ts); return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0"); }
-function money(n){ if(hideAmounts) return "••••"; var s=Math.abs(n).toFixed(2).replace(".",","); return (n<0?"−":"")+s; }
+/* Отображение суммы. Любое нечисло превращается в ноль, а не в NaN на
+   экране: сюда может прийти повреждённая запись после восстановления из
+   копии, и показывать человеку NaN хуже, чем ноль рядом с предупреждением
+   о нерабочей записи. Разряды разделяются неразрывным пробелом, иначе
+   пятизначные суммы читаются с трудом. */
+function money(n){
+  if(hideAmounts) return "••••";
+  var v = Number(n);
+  if(!isFinite(v)) v = 0;
+  var s = Math.abs(v).toFixed(2);
+  var whole = s.slice(0, -3).replace(/\B(?=(\d{3})+(?!\d))/g, "\u00A0");
+  return (v<0? "−" : "") + whole + "," + s.slice(-2);
+}
 function fmt(n){ return money(n)+" "+CUR; }
 function esc(s){ return String(s==null?"":s).replace(/[&<>"']/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];}); }
 /* Строгий разбор суммы операции. Ничего не спасает и не выпрямляет:
@@ -1201,25 +1239,20 @@ function renderLimits(){
   return h + '</div></div></div>';
 }
 
+/* Две независимые секции. Встречные долги одного человека не сводятся
+   и сводиться не должны: мой долг ему и его долг мне это два разных
+   обязательства, закрываются они по отдельности и в любом порядке.
+   Поэтому никакого общего итога на экране нет, а суммы стоят над своими
+   списками и всегда равны сумме строк под ними. */
 function renderDebt(){
   var all = ops();
-  var iOwe = FIN.totalDebt(state.config, all), owedMe = FIN.totalClaims(state.config, all);
   var mine = FIN.debtBreakdown(state.config, all).filter(function(r){ return r.amount!==0; });
   var theirs = FIN.claimBreakdown(state.config, all).filter(function(r){ return r.amount!==0; });
-  var net = FIN.r2(owedMe - iOwe);
 
-  var h = '<div class="sum2">'+
-    '<div><div class="k">Я должен</div><div class="v" style="color:var(--neg)">'+esc(money(iOwe))+'</div></div>'+
-    '<div><div class="k">Мне должны</div><div class="v" style="color:var(--pos)">'+esc(money(owedMe))+'</div></div></div>';
-  h += '<div class="card" style="padding:14px"><div class="eyebrow">Итог по долгам</div>'+
-    '<div style="font-family:var(--f-display); font-size:28px; font-weight:800; font-variant-numeric:tabular-nums; margin-top:2px; color:'+
-    (net>0?"var(--pos)":net<0?"var(--neg)":"inherit")+'">'+esc(fmt(net))+'</div>'+
-    '<div class="hint" style="margin-top:4px">'+
-    (net>0? "столько тебе должны сверх того, что должен ты" : net<0? "на столько ты должен больше, чем должны тебе" : "долги сходятся")+
-    '</div></div>';
-
-  h += debtSection("Я должен", mine, "🤝", "остаток долга", "переплата", "var(--neg)");
-  h += debtSection("Мне должны", theirs, "📤", "ещё не вернули", "вернули лишнего", "var(--pos)");
+  var h = debtSection("Я должен", FIN.totalDebt(state.config, all), mine,
+                      "🤝", "остаток долга", "переплата", "var(--neg)");
+  h += debtSection("Мне должны", FIN.totalClaims(state.config, all), theirs,
+                   "📤", "ещё не вернули", "вернули лишнего", "var(--pos)");
 
   h += '<div class="actions">'+
     '<button class="act" data-act="debt"><b>🤝</b>Взял в долг</button>'+
@@ -1230,9 +1263,13 @@ function renderDebt(){
   view.innerHTML = h;
 }
 
-/* Один и тот же список для обеих сторон: отличаются только подписи. */
-function debtSection(title, rows, icon, wordOpen, wordOver, color){
-  var h = '<div class="sect"><h2 class="sh">'+esc(title)+'</h2><div class="card">';
+/* Один и тот же список для обеих сторон: отличаются только подписи.
+   Сумма в заголовке берётся из ядра, а не складывается здесь заново,
+   поэтому разойтись со строками она не может. */
+function debtSection(title, total, rows, icon, wordOpen, wordOver, color){
+  var h = '<div class="sect"><div class="sectHead"><h2 class="sh">'+esc(title)+'</h2>'+
+    '<span class="sectSum" style="color:'+(total>0? color : "var(--muted)")+'">'+esc(fmt(total))+'</span>'+
+    '</div><div class="card">';
   if(!rows.length) h += '<div class="empty">Здесь пусто.</div>';
   else rows.forEach(function(r){
     h += '<div class="accRow"><div class="accIco">'+esc(icon)+'</div><div class="accName">'+esc(r.person)+
@@ -1469,6 +1506,8 @@ function sheetMoney(kind, ex){
 
 function sheetTransfer(ex){
   var o = ex||{}, accs = state.config.accounts;
+  /* Перевод бессмыслен и раньше падал на accs[1], если счёт один. */
+  if(accs.length < 2){ toast("Для перевода нужны минимум два счёта"); return; }
   var body = amtField(o)+
     '<label class="f">Откуда</label>'+chipsHTML(accs,"from", o.account||accs[0].id)+
     '<label class="f">Куда</label>'+chipsHTML(accs,"to", o.toAccount||accs[1].id)+
@@ -1578,6 +1617,8 @@ function sheetRepay(ex){
   var names = state.config.people.slice();
   if(o.person && names.indexOf(o.person)<0) names.push(o.person);
   if(!names.length){ toast("Сначала добавь человека на вкладке Ещё"); return; }
+  /* Деньги уходят со счёта, значит счёт обязан существовать. */
+  if(!state.config.accounts.length){ toast("Нет ни одного счёта"); return; }
   var people = names.map(function(p){ return {id:p, name:p+" · "+money(FIN.debtFor(ops(), p, null, state.config)), icon:"◷"}; });
   var body = amtField(o)+
     '<label class="f">Кому отдаю</label>'+chipsHTML(people,"per", o.person||names[0])+
