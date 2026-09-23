@@ -2,7 +2,7 @@
    Кешируются только свои файлы. Библиотека Supabase и сама база живут в
    сети: без неё приложение открывается и работает на локальных данных,
    а записи уходят в очередь и досылаются при появлении связи. */
-const CACHE = "wallet-byn-v4";
+const CACHE = "wallet-byn-v6";
 const CORE = ["./", "./index.html", "./engine.js", "./config.js", "./ai.js",
               "./vendor/supabase.js",
               "./manifest.webmanifest", "./icon-192.png", "./icon-512.png"];

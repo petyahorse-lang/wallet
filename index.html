@@ -53,7 +53,7 @@ img{max-width:100%}
   --shadow:0 1px 2px rgba(0,0,0,.45), 0 14px 30px -18px rgba(0,0,0,.75);
 }
 *{box-sizing:border-box}
-html{height:100%}
+html{height:100%; background:var(--surface)}
 /* Высота страницы задаётся краями видимой области, а не единицами высоты.
    На айфоне с приложением на главном экране страница бывает сдвинута вниз
    на статусную строку, а 100% и 100dvh всё равно отмеряют весь экран:
@@ -102,6 +102,9 @@ main{flex:1 1 auto; min-height:0; overflow-y:auto; -webkit-overflow-scrolling:to
 .wrap{padding:12px 14px 28px; display:flex; flex-direction:column; gap:12px; max-width:720px; margin:0 auto}
 
 nav.tabs{flex:none; display:grid; grid-template-columns:repeat(6,1fr); background:var(--surface); border-top:1px solid var(--line-soft); padding-bottom:env(safe-area-inset-bottom, 0px)}
+/* Страница не дотянулась до низа экрана (см. скрипт перед config.js):
+   полоска «домой» уже за её краем, отступ под неё только поднимает панель. */
+html.shortView nav.tabs{padding-bottom:0}
 nav.tabs button{min-height:52px; padding:9px 1px 10px; font-size:10px; letter-spacing:-.01em; font-weight:600; color:var(--muted); border-top:2px solid transparent; margin-top:-1px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px; line-height:1}
 nav.tabs button .ti{font-size:17px; line-height:1}
 nav.tabs button[aria-current="true"]{color:var(--accent); border-top-color:var(--accent)}
@@ -302,6 +305,23 @@ input.amount{font-family:var(--f-num); font-size:32px; font-weight:600; padding:
   <button data-tab="more"><span class="ti">•••</span>Ещё</button>
 </nav>
 
+<script>
+/* Айфон с приложением на главном экране иногда сдвигает страницу вниз под
+   статусную строку и не дотягивает её до низа экрана. Тогда полоска «домой»
+   оказывается ниже страницы, и нижний безопасный отступ у панели лишний.
+   В нормальном режиме страница равна экрану, и класс не ставится. */
+(function () {
+  if (!navigator.standalone) return;
+  function check() {
+    var portrait = innerHeight > innerWidth;
+    var gap = portrait ? screen.height - innerHeight : 0;
+    document.documentElement.classList.toggle("shortView", gap > 20);
+  }
+  check();
+  addEventListener("resize", check);
+  addEventListener("orientationchange", function () { setTimeout(check, 300); });
+})();
+</script>
 <script src="config.js"></script>
 <script src="engine.js"></script>
 <script src="ai.js"></script>
