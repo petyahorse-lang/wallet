@@ -170,7 +170,11 @@
         return;
       }
       if (op.type === "lend") {
-        if (!op.person || !known(ids, op.account)) { bad[op.id] = true; return; }
+        if (!op.person) { bad[op.id] = true; return; }
+        /* Счёт необязателен по той же причине, что и у взятого долга:
+           так записывают займ, который случился раньше, деньги по нему
+           давно ушли и сегодняшний баланс двигать не должны. */
+        if (op.account && !known(ids, op.account)) { bad[op.id] = true; return; }
         lent[op.person] = r2((lent[op.person] || 0) + a);
         return;
       }
@@ -294,9 +298,15 @@
     if (r2(a) !== a) return bad("Сумма указывается с точностью до копейки");
     var ids = accountIds(config);
 
-    if (op.type === "income" || op.type === "expense" || op.type === "repay" ||
-        op.type === "debt" || op.type === "lend" || op.type === "collect") {
+    if (op.type === "income" || op.type === "expense" ||
+        op.type === "repay" || op.type === "collect") {
       if (!known(ids, op.account)) return bad("Выбери существующий счёт");
+    }
+    /* У возникновения долга счёт можно не указывать вовсе: это запись
+       старого обязательства, по которому деньги ходили до того, как их
+       начали считать здесь. Указан счёт значит деньги двигаются сейчас. */
+    if (op.type === "debt" || op.type === "lend") {
+      if (op.account && !known(ids, op.account)) return bad("Выбери существующий счёт");
     }
     if (op.type === "transfer") {
       if (!known(ids, op.account)) return bad("Счёт списания не существует");

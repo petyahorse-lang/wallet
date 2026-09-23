@@ -65,11 +65,11 @@ button,input,select,textarea{font:inherit; color:inherit}
 button{cursor:pointer; background:none; border:none}
 :focus-visible{outline:2px solid var(--accent); outline-offset:2px; border-radius:8px}
 
-header.top{flex:none; padding:13px 16px 11px; background:var(--surface); border-bottom:1px solid var(--line-soft)}
+header.top{flex:none; padding:9px 14px 8px; background:var(--surface); border-bottom:1px solid var(--line-soft)}
 .topRow{display:flex; align-items:flex-start; justify-content:space-between; gap:10px}
 .eyebrow{font-size:11px; letter-spacing:.09em; text-transform:uppercase; color:var(--muted); font-weight:600}
-.total{font-family:var(--f-display); font-size:33px; font-weight:800; line-height:1.05; letter-spacing:-.02em; font-variant-numeric:tabular-nums; margin-top:2px}
-.total small{font-size:15px; font-weight:600; color:var(--muted); margin-left:5px}
+.total{font-family:var(--f-display); font-size:26px; font-weight:800; line-height:1.05; letter-spacing:-.02em; font-variant-numeric:tabular-nums; margin-top:1px}
+.total small{font-size:13px; font-weight:600; color:var(--muted); margin-left:4px}
 .topTools{display:flex; flex-direction:column; align-items:flex-end; gap:6px}
 .pill{display:inline-flex; align-items:center; gap:6px; font-size:11px; font-weight:600; color:var(--muted); border:1px solid var(--line); border-radius:999px; padding:4px 9px; white-space:nowrap}
 .pill i{width:6px; height:6px; border-radius:50%; background:var(--muted); display:block}
@@ -78,34 +78,36 @@ header.top{flex:none; padding:13px 16px 11px; background:var(--surface); border-
 .eye{font-size:12px; color:var(--muted); font-weight:600; min-height:32px; padding:6px 8px; margin:-6px -8px}
 
 main{flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch}
-.wrap{padding:16px 16px 96px; display:flex; flex-direction:column; gap:16px; max-width:720px; margin:0 auto}
+/* Нижний отступ был рассчитан на плавающую кнопку, которой больше нет.
+   Теперь это просто воздух в конце списка. */
+.wrap{padding:12px 14px 28px; display:flex; flex-direction:column; gap:12px; max-width:720px; margin:0 auto}
 
 nav.tabs{flex:none; display:grid; grid-template-columns:repeat(6,1fr); background:var(--surface); border-top:1px solid var(--line-soft); padding-bottom:env(safe-area-inset-bottom, 0px)}
 nav.tabs button{min-height:52px; padding:9px 1px 10px; font-size:10px; letter-spacing:-.01em; font-weight:600; color:var(--muted); border-top:2px solid transparent; margin-top:-1px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px; line-height:1}
 nav.tabs button .ti{font-size:17px; line-height:1}
 nav.tabs button[aria-current="true"]{color:var(--accent); border-top-color:var(--accent)}
 
-/* Крупная кнопка добавления: большой палец достаёт её не глядя. */
-.fab{
-  position:fixed; right:16px; z-index:30;
-  bottom:calc(env(safe-area-inset-bottom, 0px) + 66px);
-  width:60px; height:60px; border-radius:50%;
+/* Кнопка добавления живёт в строке поиска на Истории, а не поверх списка.
+   Плавающая круглая кнопка в углу закрывала собой то суммы в строках, то
+   подсказку, то вкладку Ещё: в списке, где справа стоят цифры, накрывать
+   правый нижний угол нельзя. */
+.searchLine{display:flex; gap:8px; align-items:stretch}
+.searchLine .inp{flex:1}
+.addBtn{
+  flex:none; width:46px; border-radius:10px;
   background:var(--accent); color:var(--accent-ink);
-  font-size:30px; line-height:1; font-weight:400;
-  display:grid; place-items:center;
-  box-shadow:0 6px 20px -6px rgba(0,0,0,.45);
+  font-size:22px; line-height:1; display:grid; place-items:center;
 }
-.fab:active{transform:scale(.96)}
-@media (prefers-reduced-motion:reduce){.fab:active{transform:none}}
+.addBtn:active{opacity:.85}
 
 /* Выбор типа операции: пять крупных строк, попадаешь пальцем сразу. */
-.pickList{display:flex; flex-direction:column; gap:9px}
+.pickList{display:flex; flex-direction:column; gap:7px}
 .pick{
-  display:flex; align-items:center; gap:12px; width:100%; text-align:left;
-  min-height:58px; padding:12px 14px; border-radius:14px;
+  display:flex; align-items:center; gap:11px; width:100%; text-align:left;
+  min-height:52px; padding:10px 12px; border-radius:13px;
   background:var(--surface-2); font-size:16px; font-weight:600;
 }
-.pick .pi{width:38px; height:38px; flex:none; border-radius:11px; background:var(--surface); display:grid; place-items:center; font-size:19px}
+.pick .pi{width:34px; height:34px; flex:none; border-radius:10px; background:var(--surface); display:grid; place-items:center; font-size:17px}
 .pick .ps{display:block; font-size:12px; font-weight:400; color:var(--muted); margin-top:2px}
 .pick.primary{background:var(--accent); color:var(--accent-ink)}
 .pick.primary .pi{background:rgba(255,255,255,.18)}
@@ -113,48 +115,51 @@ nav.tabs button[aria-current="true"]{color:var(--accent); border-top-color:var(-
 
 /* Сводка месяца на главной. */
 .sum2{display:grid; grid-template-columns:1fr 1fr; gap:1px; background:var(--line-soft); border-radius:var(--r); overflow:hidden}
-.sum2 div{background:var(--surface); padding:11px 13px}
+.sum2 div{background:var(--surface); padding:9px 12px}
 .sum2 .k{font-size:11px; letter-spacing:.05em; text-transform:uppercase; color:var(--muted); font-weight:600}
 .sum2 .v{font-family:var(--f-num); font-size:17px; font-weight:600; font-variant-numeric:tabular-nums; margin-top:2px}
 
 .card{background:var(--surface); border:1px solid var(--line-soft); border-radius:var(--r); box-shadow:var(--shadow)}
-.sect{display:flex; flex-direction:column; gap:10px}
-h2.sh{font-family:var(--f-display); font-size:13px; font-weight:600; letter-spacing:.06em; text-transform:uppercase; color:var(--muted); margin:0}
-.accRow{display:flex; align-items:center; gap:12px; min-height:56px; padding:13px 14px; border-bottom:1px solid var(--line-soft)}
+.sect{display:flex; flex-direction:column; gap:8px}
+h2.sh{font-family:var(--f-display); font-size:12px; font-weight:600; letter-spacing:.06em; text-transform:uppercase; color:var(--muted); margin:0}
+.accRow{display:flex; align-items:center; gap:10px; min-height:48px; padding:9px 12px; border-bottom:1px solid var(--line-soft)}
 .accRow:last-child{border-bottom:none}
-.accIco{width:34px; height:34px; flex:none; border-radius:10px; background:var(--chip); display:grid; place-items:center; font-size:17px}
-.accName{flex:1; font-weight:500}
+.accIco{width:30px; height:30px; flex:none; border-radius:9px; background:var(--chip); display:grid; place-items:center; font-size:15px}
+.accName{flex:1; font-weight:500; line-height:1.25}
 .accVal{font-family:var(--f-num); font-weight:500; font-variant-numeric:tabular-nums; white-space:nowrap}
 
-.actions{display:grid; grid-template-columns:repeat(2,1fr); gap:10px}
-.act{border-radius:var(--r); min-height:52px; padding:14px; font-weight:600; font-size:14px; display:flex; align-items:center; gap:9px; border:1px solid var(--line); background:var(--surface); box-shadow:var(--shadow); text-align:left}
-.act b{font-size:17px; line-height:1; font-weight:400}
+.actions{display:grid; grid-template-columns:repeat(2,1fr); gap:8px}
+.act{border-radius:var(--r); min-height:46px; padding:10px 12px; font-weight:600; font-size:14px; display:flex; align-items:center; gap:8px; border:1px solid var(--line); background:var(--surface); box-shadow:var(--shadow); text-align:left}
+.act b{font-size:16px; line-height:1; font-weight:400}
 .act.primary{background:var(--accent); color:var(--accent-ink); border-color:transparent}
 
-.opRow{display:flex; align-items:center; gap:11px; min-height:56px; padding:12px 14px; width:100%; border-bottom:1px solid var(--line-soft); text-align:left}
+/* Строка операции: компактная, чтобы на экран влезало больше записей. */
+.opRow{display:flex; align-items:center; gap:10px; min-height:44px; padding:7px 12px; width:100%; border-bottom:1px solid var(--line-soft); text-align:left}
 .opRow:last-child{border-bottom:none}
-.opIco{width:30px; height:30px; flex:none; border-radius:9px; background:var(--chip); display:grid; place-items:center; font-size:15px}
-.opMid{flex:1; min-width:0}
-.opTitle{font-weight:500; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
-.opSub{font-size:12px; color:var(--muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+.opIco{width:28px; height:28px; flex:none; border-radius:8px; background:var(--chip); display:grid; place-items:center; font-size:15px}
+/* Межстрочный интервал внутри строки свой: у двух строк подряд общий
+   1.45 из body давал почти сорок пикселей на один текст. */
+.opMid{flex:1; min-width:0; line-height:1.25}
+.opTitle{font-weight:500; line-height:1.25; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+.opSub{font-size:11.5px; line-height:1.25; margin-top:1px; color:var(--muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
 .opAmt{font-family:var(--f-num); font-weight:500; font-variant-numeric:tabular-nums; white-space:nowrap}
 .opAmt.pos{color:var(--pos)} .opAmt.neg{color:var(--neg)}
 .unsynced{font-size:10px; color:var(--warn); margin-left:5px}
 
-.dayHead{font-size:11px; font-weight:600; letter-spacing:.07em; text-transform:uppercase; color:var(--muted); padding:14px 2px 6px}
-.empty{padding:26px 18px; text-align:center; color:var(--muted); font-size:14px}
+.dayHead{font-size:11px; font-weight:600; letter-spacing:.07em; text-transform:uppercase; color:var(--muted); padding:9px 2px 4px}
+.empty{padding:20px 16px; text-align:center; color:var(--muted); font-size:14px}
 .empty b{display:block; color:var(--ink); font-weight:600; margin-bottom:4px; font-family:var(--f-display)}
 
 .seg{display:flex; gap:4px; background:var(--surface-2); padding:4px; border-radius:11px}
-.seg button{flex:1; min-height:44px; padding:10px 4px; border-radius:8px; font-size:13px; font-weight:600; color:var(--muted)}
+.seg button{flex:1; min-height:40px; padding:8px 4px; border-radius:8px; font-size:13px; font-weight:600; color:var(--muted)}
 .seg button[aria-pressed="true"]{background:var(--surface); color:var(--ink); box-shadow:0 1px 2px rgba(0,0,0,.10)}
 
 .statGrid{display:grid; grid-template-columns:1fr 1fr; gap:1px; background:var(--line-soft); border-radius:var(--r); overflow:hidden}
-.statCell{background:var(--surface); padding:12px 14px}
+.statCell{background:var(--surface); padding:10px 12px}
 .statCell .k{font-size:11px; letter-spacing:.06em; text-transform:uppercase; color:var(--muted); font-weight:600}
 .statCell .v{font-family:var(--f-num); font-size:18px; font-weight:600; font-variant-numeric:tabular-nums; margin-top:3px}
 
-.bars{display:flex; flex-direction:column; gap:12px; padding:14px}
+.bars{display:flex; flex-direction:column; gap:10px; padding:12px}
 .barTop{display:flex; justify-content:space-between; gap:10px; font-size:13px; align-items:baseline}
 .barTop span:last-child{font-family:var(--f-num); font-variant-numeric:tabular-nums; color:var(--muted); font-size:12px}
 .track{height:7px; border-radius:99px; background:var(--surface-2); margin-top:6px; overflow:hidden}
@@ -166,16 +171,18 @@ h2.sh{font-family:var(--f-display); font-size:13px; font-weight:600; letter-spac
 .miniBtn{font-size:13px; font-weight:600; min-height:40px; padding:9px 13px; border-radius:9px; border:1px solid var(--line); color:var(--ink)}
 .miniBtn.solid{background:var(--accent); color:var(--accent-ink); border-color:transparent}
 
-.fieldset{display:flex; flex-direction:column; gap:12px; padding:14px}
+.fieldset{display:flex; flex-direction:column; gap:10px; padding:12px}
 label.f{display:flex; flex-direction:column; gap:6px; font-size:12px; font-weight:600; color:var(--muted); letter-spacing:.03em}
-input.inp,textarea.inp{background:var(--bg); border:1px solid var(--line); border-radius:10px; padding:12px; font-size:16px; font-weight:400; color:var(--ink); width:100%}
+/* 16px у поля ввода обязательны: при меньшем размере Сафари на айфоне
+   зумит страницу, как только палец попадает в поле. */
+input.inp,textarea.inp{background:var(--bg); border:1px solid var(--line); border-radius:10px; padding:10px 12px; font-size:16px; font-weight:400; color:var(--ink); width:100%}
 input.amount{font-family:var(--f-num); font-size:32px; font-weight:600; padding:14px 12px; letter-spacing:-.01em}
 .chips{display:flex; flex-wrap:wrap; gap:7px}
-.chip{min-height:40px; padding:10px 13px; border-radius:10px; background:var(--chip); font-size:13px; font-weight:500; border:1px solid transparent; display:flex; align-items:center; gap:6px}
+.chip{min-height:36px; padding:7px 11px; border-radius:10px; background:var(--chip); font-size:13px; font-weight:500; border:1px solid transparent; display:flex; align-items:center; gap:6px}
 .chip[aria-pressed="true"]{border-color:var(--accent); background:var(--surface); font-weight:600}
 .rowBtns{display:flex; gap:9px}
 .sheet .rowBtns{position:sticky; bottom:0; z-index:2; background:var(--surface); padding:10px 0 4px; margin-top:2px}
-.btn{flex:1; min-height:50px; padding:14px; border-radius:12px; font-weight:700; font-size:15px; background:var(--accent); color:var(--accent-ink); text-align:center}
+.btn{flex:1; min-height:46px; padding:12px; border-radius:12px; font-weight:700; font-size:15px; background:var(--accent); color:var(--accent-ink); text-align:center}
 .btn.ghost{background:var(--surface-2); color:var(--ink)}
 .btn.danger{background:transparent; color:var(--neg); border:1px solid var(--line)}
 .linkBtn{color:var(--accent); font-weight:600; font-size:14px; min-height:44px; padding:10px 0; text-align:left}
@@ -190,14 +197,16 @@ input.amount{font-family:var(--f-num); font-size:32px; font-weight:600; padding:
 .toast{position:fixed; left:50%; transform:translateX(-50%); bottom:74px; z-index:60; background:var(--ink); color:var(--bg); padding:9px 14px; border-radius:11px; font-size:13px; font-weight:600; box-shadow:var(--shadow); max-width:88%; text-align:center}
 .csvBox{width:100%; min-height:150px; font-family:var(--f-num); font-size:11px; background:var(--bg); border:1px solid var(--line); border-radius:10px; padding:10px}
 .hint{font-size:12px; color:var(--muted); line-height:1.5}
-.setRow{display:flex; align-items:center; gap:10px; min-height:56px; padding:11px 14px; border-bottom:1px solid var(--line-soft)}
+.setRow{display:flex; align-items:center; gap:10px; min-height:48px; padding:8px 12px; border-bottom:1px solid var(--line-soft)}
 .setRow:last-child{border-bottom:none}
 .setRow .lbl{flex:1; font-weight:500}
 .setRow input.inp{max-width:130px; text-align:right; font-family:var(--f-num)}
-.searchRow{display:flex; flex-direction:column; gap:9px; position:sticky; top:0; z-index:5; background:var(--bg); padding-bottom:8px; margin:-4px -16px 0; padding-left:16px; padding-right:16px; padding-top:4px}
+.setRow input.inp.iconIn{max-width:52px; text-align:center; font-family:var(--f-body); font-size:17px; padding:8px 4px}
+.searchRow{display:flex; flex-direction:column; gap:8px; position:sticky; top:0; z-index:5; background:var(--bg); padding-bottom:6px; margin:-2px -14px 0; padding-left:14px; padding-right:14px; padding-top:2px}
 .chips.scroll{flex-wrap:nowrap; overflow-x:auto; -webkit-overflow-scrolling:touch; scrollbar-width:none; padding-bottom:2px}
 .chips.scroll::-webkit-scrollbar{display:none}
 .chips.scroll .chip{flex:none; white-space:nowrap}
+.chips.scroll::after{content:""; flex:none; width:6px}
 
 .lock{position:fixed; inset:0; z-index:90; background:var(--bg); display:flex; flex-direction:column; align-items:center; justify-content:center; gap:18px; padding:24px}
 .lock h1{font-family:var(--f-display); font-size:22px; font-weight:800; margin:0}
@@ -260,8 +269,6 @@ input.amount{font-family:var(--f-num); font-size:32px; font-weight:600; padding:
 
 <main><div class="wrap" id="view"></div></main>
 
-<button class="fab" id="fab" aria-label="Добавить операцию">＋</button>
-
 <nav class="tabs" id="tabs">
   <button data-tab="home" aria-current="true"><span class="ti">◍</span>Главная</button>
   <button data-tab="hist"><span class="ti">≡</span>История</button>
@@ -286,15 +293,16 @@ var DEFAULT_CONFIG = {
   ],
   categories: [
     {id:"food",  name:"Еда",         icon:"🍔"},
-    {id:"trans", name:"Транспорт",   icon:"🚕"},
+    {id:"trans", name:"Транспорт",   icon:"🚌"},
+    {id:"taxi",  name:"Такси",       icon:"🚕"},
     {id:"home",  name:"Жильё",       icon:"🏠"},
     {id:"fun",   name:"Развлечения", icon:"🎮"},
     {id:"conn",  name:"Связь",       icon:"📱"},
-    {id:"heal",  name:"Здоровье",    icon:"🏋️"},
+    {id:"heal",  name:"Здоровье",    icon:"💊"},
     {id:"misc",  name:"Прочее",      icon:"📦"}
   ],
   incomeCats: [
-    {id:"salary", name:"Зарплата", icon:"💼"},
+    {id:"salary", name:"Зарплата", icon:"💰"},
     {id:"gift",   name:"Подарок",  icon:"🎁"},
     {id:"other",  name:"Прочее",   icon:"📦"}
   ],
@@ -969,12 +977,6 @@ function render(){
      Класс ставится здесь, в одном месте, чтобы остальные вкладки о нём
      не знали и рисовались ровно как раньше. */
   view.className = tab==="ai" ? "wrap chatMode" : "wrap";
-  /* Круглая кнопка показывается только там, где нажать больше нечего:
-     в истории и в лимитах. На главной и в долгах кнопки операций уже на
-     экране, в настройках и в чате она не нужна вовсе, а нижний правый угол
-     занимает: перекрывает текст и налезает на вкладку Ещё. */
-  var fab = document.getElementById("fab");
-  if(fab) fab.hidden = (tab!=="hist" && tab!=="stat");
   if(tab==="home") renderHome();
   else if(tab==="hist") renderHist();
   else if(tab==="stat") renderStat();
@@ -1011,12 +1013,12 @@ function renderHome(){
     '<div><div class="k">Расходы</div><div class="v" style="color:var(--neg)">'+esc(money(mst.expense))+'</div></div></div></div>';
   h += '<button class="btn" data-act="expense" style="font-size:16px; min-height:56px">− Записать расход</button>';
   h += '<div class="actions">'+
-    '<button class="act" data-act="income"><b>＋</b>Доход</button>'+
-    '<button class="act" data-act="transfer"><b>⇄</b>Перевод</button>'+
-    '<button class="act" data-act="debt"><b>◷</b>Взял в долг</button>'+
-    '<button class="act" data-act="repay"><b>✓</b>Отдал долг</button>'+
-    '<button class="act" data-act="lend"><b>↗</b>Дал в долг</button>'+
-    '<button class="act" data-act="collect"><b>↙</b>Мне вернули</button></div>';
+    '<button class="act" data-act="income"><b>💰</b>Доход</button>'+
+    '<button class="act" data-act="transfer"><b>🔄</b>Перевод</button>'+
+    '<button class="act" data-act="debt"><b>🤝</b>Взял в долг</button>'+
+    '<button class="act" data-act="repay"><b>💸</b>Отдал долг</button>'+
+    '<button class="act" data-act="lend"><b>📤</b>Дал в долг</button>'+
+    '<button class="act" data-act="collect"><b>📥</b>Мне вернули</button></div>';
   h += '<div class="sect"><h2 class="sh">Последние операции</h2><div class="card">';
   h += last.length? last.map(opRowHTML).join("") : '<div class="empty"><b>Пока пусто</b>Нажми Записать расход или плюс внизу справа.</div>';
   h += '</div>';
@@ -1029,21 +1031,21 @@ function opMeta(o){
   var a = Math.abs(Number(o.amount)||0), m = {ico:"•", title:"", sub:"", amt:"", cls:""};
   if(o.type==="income"){ var c=catObj(o.category,true); m.ico=c.icon; m.title=c.name; m.cls="pos"; m.amt="+"+money(a); m.sub=accIcon(o.account)+" "+FIN.nameOfAccount(state.config,o.account); }
   else if(o.type==="expense"){ var c2=catObj(o.category,false); m.ico=c2.icon; m.title=c2.name; m.cls="neg"; m.amt="−"+money(a); m.sub=accIcon(o.account)+" "+FIN.nameOfAccount(state.config,o.account); }
-  else if(o.type==="transfer"){ m.ico="⇄"; m.title="Перевод"; m.amt=money(a); m.sub=FIN.nameOfAccount(state.config,o.account)+" → "+FIN.nameOfAccount(state.config,o.toAccount); }
+  else if(o.type==="transfer"){ m.ico="🔄"; m.title="Перевод"; m.amt=money(a); m.sub=FIN.nameOfAccount(state.config,o.account)+" → "+FIN.nameOfAccount(state.config,o.toAccount); }
   else if(o.type==="debt"){
     /* Долги без счёта записаны до того, как долг стал двигать деньги.
        Показываем их без знака: знак означал бы движение, которого не было. */
     var acc = !!o.account;
-    m.ico="◷"; m.title="Взял в долг"; m.cls=acc?"pos":""; m.amt=(acc?"+":"")+money(a);
+    m.ico="🤝"; m.title="Взял в долг"; m.cls=acc?"pos":""; m.amt=(acc?"+":"")+money(a);
     m.sub="Должен: "+(o.person||"—")+" · "+(acc? FIN.nameOfAccount(state.config,o.account) : "без счёта");
   }
-  else if(o.type==="repay"){ m.ico="✓"; m.title="Отдал долг"; m.cls="neg"; m.amt="−"+money(a); m.sub=(o.person||"—")+" · "+FIN.nameOfAccount(state.config,o.account); }
+  else if(o.type==="repay"){ m.ico="💸"; m.title="Отдал долг"; m.cls="neg"; m.amt="−"+money(a); m.sub=(o.person||"—")+" · "+FIN.nameOfAccount(state.config,o.account); }
   else if(o.type==="lend"){
     var lacc = !!o.account;
-    m.ico="↗"; m.title="Дал в долг"; m.cls=lacc?"neg":""; m.amt=(lacc?"−":"")+money(a);
+    m.ico="📤"; m.title="Дал в долг"; m.cls=lacc?"neg":""; m.amt=(lacc?"−":"")+money(a);
     m.sub=(o.person||"—")+" · "+(lacc? FIN.nameOfAccount(state.config,o.account) : "без счёта");
   }
-  else if(o.type==="collect"){ m.ico="↙"; m.title="Мне вернули"; m.cls="pos"; m.amt="+"+money(a); m.sub=(o.person||"—")+" · "+FIN.nameOfAccount(state.config,o.account); }
+  else if(o.type==="collect"){ m.ico="📥"; m.title="Мне вернули"; m.cls="pos"; m.amt="+"+money(a); m.sub=(o.person||"—")+" · "+FIN.nameOfAccount(state.config,o.account); }
   if(o.note) m.sub += " · "+o.note;
   return m;
 }
@@ -1078,7 +1080,10 @@ function matches(o){
 function renderHist(){
   var all = validOps(), list = all.filter(matches), broken = brokenOps();
   var h = '<div class="searchRow">'+
-    '<input class="inp" id="q" type="search" enterkeyhint="search" placeholder="Поиск: комментарий, категория, человек" value="'+esc(search)+'">'+
+    '<div class="searchLine">'+
+      '<input class="inp" id="q" type="search" enterkeyhint="search" placeholder="Поиск: комментарий, категория, человек" value="'+esc(search)+'">'+
+      '<button class="addBtn" data-act="quickAdd" aria-label="Добавить операцию">＋</button>'+
+    '</div>'+
     '<div class="chips scroll" id="hf">'+
       [["all","Все"],["expense","Расходы"],["income","Доходы"],["transfer","Переводы"],["debts","Долги"]].map(function(f){
         return '<button class="chip" data-hf="'+f[0]+'" aria-pressed="'+String(histFilter===f[0])+'">'+f[1]+'</button>';
@@ -1134,7 +1139,7 @@ function renderStat(){
   var from = periodStart(), st = FIN.periodStats(ops(), from, state.config);
   var limitsBlock = renderLimits();
   var cats = Object.keys(st.byCat).map(function(id){
-    var c = id==="__debt"? {name:"Долги", icon:"💳"} : catObj(id,false);
+    var c = id==="__debt"? {name:"Долги", icon:"🤝"} : catObj(id,false);
     return {id:id, name:c.name, icon:c.icon, sum:st.byCat[id]};
   }).sort(function(a,b){ return b.sum-a.sum; });
 
@@ -1213,14 +1218,14 @@ function renderDebt(){
     (net>0? "столько тебе должны сверх того, что должен ты" : net<0? "на столько ты должен больше, чем должны тебе" : "долги сходятся")+
     '</div></div>';
 
-  h += debtSection("Я должен", mine, "◷", "остаток долга", "переплата", "var(--neg)");
-  h += debtSection("Мне должны", theirs, "↗", "ещё не вернули", "вернули лишнего", "var(--pos)");
+  h += debtSection("Я должен", mine, "🤝", "остаток долга", "переплата", "var(--neg)");
+  h += debtSection("Мне должны", theirs, "📤", "ещё не вернули", "вернули лишнего", "var(--pos)");
 
   h += '<div class="actions">'+
-    '<button class="act" data-act="debt"><b>◷</b>Взял в долг</button>'+
-    '<button class="act" data-act="repay"><b>✓</b>Отдал долг</button>'+
-    '<button class="act" data-act="lend"><b>↗</b>Дал в долг</button>'+
-    '<button class="act" data-act="collect"><b>↙</b>Мне вернули</button></div>';
+    '<button class="act" data-act="debt"><b>🤝</b>Взял в долг</button>'+
+    '<button class="act" data-act="repay"><b>💸</b>Отдал долг</button>'+
+    '<button class="act" data-act="lend"><b>📤</b>Дал в долг</button>'+
+    '<button class="act" data-act="collect"><b>📥</b>Мне вернули</button></div>';
   h += '<div class="hint">Все четыре операции двигают деньги на счёте: взял и вернули приносят, отдал и дал уносят. Отдельный расход или доход рядом создавать не надо, иначе сумма посчитается дважды. Отдавать и получать можно частями, сколько угодно раз.</div>';
   view.innerHTML = h;
 }
@@ -1255,7 +1260,9 @@ function renderMore(){
 
   h += '<div class="sect"><h2 class="sh">Категории расходов</h2><div class="card">';
   state.config.categories.forEach(function(c,i){
-    h += '<div class="setRow"><div class="accIco">'+esc(c.icon)+'</div><div class="lbl">'+esc(c.name)+'</div>'+
+    h += '<div class="setRow">'+
+      '<input class="inp iconIn" id="ico_'+esc(c.id)+'" value="'+esc(c.icon)+'" maxlength="6" aria-label="Значок категории">'+
+      '<div class="lbl">'+esc(c.name)+'</div>'+
       '<button class="miniBtn" data-rmcat="'+i+'">Убрать</button></div>';
   });
   h += '<div class="setRow"><input class="inp" id="newCatIcon" placeholder="🙂" style="max-width:62px; text-align:center">'+
@@ -1308,6 +1315,16 @@ function renderMore(){
       if(!isFinite(n)){ toast("Остаток: только цифры, максимум две после запятой, без минуса"); el.value = String(a.start); return; }
       a.start = n;
       state.config.setupDone = true; markConfig(); render(); toast("Остаток сохранён");
+    });
+  });
+  /* Значок меняется прямо в списке: иначе привести старые категории к
+     одному виду было бы нечем, ведь удалить категорию с операциями нельзя. */
+  state.config.categories.forEach(function(c){
+    var ic = document.getElementById("ico_"+c.id);
+    if(ic) ic.addEventListener("change", function(){
+      var v = ic.value.trim();
+      if(!v){ ic.value = c.icon; return; }
+      c.icon = v; markConfig(); render(); toast("Значок изменён");
     });
   });
   state.config.categories.forEach(function(c){
@@ -1403,13 +1420,13 @@ function focusAmount(root){
 }
 function sheetQuickAdd(){
   var rows = [
-    ["expense", "−",  "Расход",  "покупка, услуга, поездка", true],
-    ["income",  "＋", "Доход",   "зарплата, подарок", false],
-    ["transfer","⇄",  "Перевод", "между своими счетами, баланс не меняется", false],
-    ["debt",    "◷",  "Взял в долг",  "деньги пришли, ты теперь должен", false],
-    ["repay",   "✓",  "Отдал долг",   "деньги ушли, твой долг уменьшился", false],
-    ["lend",    "↗",  "Дал в долг",   "деньги ушли, теперь должны тебе", false],
-    ["collect", "↙",  "Мне вернули",  "деньги пришли, тебе должны меньше", false]
+    ["expense", "🧾", "Расход",  "покупка, услуга, поездка", true],
+    ["income",  "💰", "Доход",   "зарплата, подарок", false],
+    ["transfer","🔄", "Перевод", "между своими счетами, баланс не меняется", false],
+    ["debt",    "🤝", "Взял в долг",  "деньги пришли, ты теперь должен", false],
+    ["repay",   "💸", "Отдал долг",   "деньги ушли, твой долг уменьшился", false],
+    ["lend",    "📤", "Дал в долг",   "деньги ушли, теперь должны тебе", false],
+    ["collect", "📥", "Мне вернули",  "деньги пришли, тебе должны меньше", false]
   ];
   openSheet("Что записываем", '<div class="pickList">'+rows.map(function(r){
     return '<button class="pick'+(r[4]?" primary":"")+'" data-pick="'+r[0]+'">'+
@@ -1490,7 +1507,7 @@ function peopleChips(o, icon, amountOf){
 
 function sheetDebt(ex){
   var o = ex||{};
-  var people = peopleChips(o, "◷", null);
+  var people = peopleChips(o, "🤝", null);
   if(!people.length){ toast("Сначала добавь человека на вкладке Ещё"); return; }
   if(!state.config.accounts.length){ toast("Нет ни одного счёта"); return; }
   var body = amtField(o)+
@@ -1513,7 +1530,7 @@ function sheetDebt(ex){
 
 function sheetLend(ex){
   var o = ex||{};
-  var people = peopleChips(o, "↗", null);
+  var people = peopleChips(o, "📤", null);
   if(!people.length){ toast("Сначала добавь человека на вкладке Ещё"); return; }
   if(!state.config.accounts.length){ toast("Нет ни одного счёта"); return; }
   var body = amtField(o)+
@@ -1536,7 +1553,7 @@ function sheetLend(ex){
 
 function sheetCollect(ex){
   var o = ex||{};
-  var people = peopleChips(o, "↙", function(p){ return FIN.claimFor(ops(), p, null, state.config); });
+  var people = peopleChips(o, "📥", function(p){ return FIN.claimFor(ops(), p, null, state.config); });
   if(!people.length){ toast("Сначала добавь человека на вкладке Ещё"); return; }
   if(!state.config.accounts.length){ toast("Нет ни одного счёта"); return; }
   var body = amtField(o)+
@@ -1714,7 +1731,6 @@ document.getElementById("tabs").addEventListener("click", function(e){
   tab = b.dataset.tab; search=""; render();
   if(tab!=="ai") document.querySelector("main").scrollTop = 0;
 });
-document.getElementById("fab").addEventListener("click", function(){ sheetQuickAdd(); });
 document.getElementById("eyeBtn").addEventListener("click", function(){
   hideAmounts = !hideAmounts; lsSet(LS_PREF, {hide:hideAmounts}); render();
 });
@@ -1748,7 +1764,8 @@ view.addEventListener("click", function(e){
   }
   var a = e.target.closest("[data-act]"); if(!a) return;
   var act = a.dataset.act;
-  if(act==="income") sheetMoney("income");
+  if(act==="quickAdd") sheetQuickAdd();
+  else if(act==="income") sheetMoney("income");
   else if(act==="expense") sheetMoney("expense");
   else if(act==="transfer") sheetTransfer();
   else if(act==="debt") sheetDebt();
