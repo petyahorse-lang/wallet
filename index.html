@@ -106,7 +106,12 @@ nav.tabs{flex:none; display:grid; grid-template-columns:repeat(6,1fr); backgroun
    полоска «домой» уже за её краем, отступ под неё только поднимает панель. */
 html.shortView nav.tabs{padding-bottom:0}
 nav.tabs button{min-height:52px; padding:9px 1px 10px; font-size:10px; letter-spacing:-.01em; font-weight:600; color:var(--muted); border-top:2px solid transparent; margin-top:-1px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px; line-height:1}
-nav.tabs button .ti{font-size:17px; line-height:1}
+nav.tabs button .ti{display:grid; place-items:center}
+nav.tabs button .ti .ic{width:21px; height:21px; stroke-width:1.8}
+
+/* Контурный значок: цвет берёт от текста, размер от шрифта контейнера. */
+.ic{width:1.15em; height:1.15em; flex:none; fill:none; stroke:currentColor; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; vertical-align:-.2em}
+.emo{line-height:1}
 nav.tabs button[aria-current="true"]{color:var(--accent); border-top-color:var(--accent)}
 
 /* Кнопка добавления живёт в строке поиска на Истории, а не поверх списка.
@@ -129,7 +134,8 @@ nav.tabs button[aria-current="true"]{color:var(--accent); border-top-color:var(-
   min-height:52px; padding:10px 12px; border-radius:13px;
   background:var(--surface-2); font-size:16px; font-weight:600;
 }
-.pick .pi{width:34px; height:34px; flex:none; border-radius:10px; background:var(--surface); display:grid; place-items:center; font-size:17px}
+.pick .pi{width:34px; height:34px; flex:none; border-radius:10px; background:var(--surface); color:var(--accent); display:grid; place-items:center; font-size:17px}
+.pick.primary .pi{color:inherit}
 .pick .ps{display:block; font-size:12px; font-weight:400; color:var(--muted); margin-top:2px}
 .pick.primary{background:var(--accent); color:var(--accent-ink)}
 .pick.primary .pi{background:rgba(255,255,255,.18)}
@@ -149,21 +155,22 @@ h2.sh{font-family:var(--f-display); font-size:12px; font-weight:600; letter-spac
 .accRow{display:flex; align-items:center; gap:10px; min-height:48px; padding:9px 12px; border-bottom:1px solid var(--line-soft)}
 .accRow:last-child{border-bottom:none}
 /* Один размер контейнера для всех значков: в списке операций, в списке
-   счетов, в долгах и в настройках. Иначе эмодзи разной ширины выглядят
-   как разный набор. */
-.accIco{width:28px; height:28px; flex:none; border-radius:8px; background:var(--chip); display:grid; place-items:center; font-size:15px; line-height:1}
+   счетов, в долгах и в настройках. */
+.accIco{width:28px; height:28px; flex:none; border-radius:8px; background:var(--chip); color:var(--accent); display:grid; place-items:center; font-size:15px; line-height:1}
 .accName{flex:1; font-weight:500; line-height:1.25}
 .accVal{font-family:var(--f-num); font-weight:500; font-variant-numeric:tabular-nums; white-space:nowrap}
 
 .actions{display:grid; grid-template-columns:repeat(2,1fr); gap:8px}
 .act{border-radius:var(--r); min-height:46px; padding:10px 12px; font-weight:600; font-size:14px; display:flex; align-items:center; gap:8px; border:1px solid var(--line); background:var(--surface); box-shadow:var(--shadow); text-align:left}
-.act b{font-size:16px; line-height:1; font-weight:400}
+.act b{font-size:16px; line-height:1; font-weight:400; color:var(--accent); display:grid}
 .act.primary{background:var(--accent); color:var(--accent-ink); border-color:transparent}
 
 /* Строка операции: компактная, чтобы на экран влезало больше записей. */
 .opRow{display:flex; align-items:center; gap:10px; min-height:44px; padding:7px 12px; width:100%; border-bottom:1px solid var(--line-soft); text-align:left}
 .opRow:last-child{border-bottom:none}
-.opIco{width:28px; height:28px; flex:none; border-radius:8px; background:var(--chip); display:grid; place-items:center; font-size:15px; line-height:1}
+.opIco{width:28px; height:28px; flex:none; border-radius:8px; background:var(--chip); color:var(--accent); display:grid; place-items:center; font-size:15px; line-height:1}
+.opIco.bad{color:var(--warn)}
+.opSub .ic{width:1.1em; height:1.1em; vertical-align:-.22em}
 /* Межстрочный интервал внутри строки свой: у двух строк подряд общий
    1.45 из body давал почти сорок пикселей на один текст. */
 .opMid{flex:1; min-width:0; line-height:1.25}
@@ -171,7 +178,11 @@ h2.sh{font-family:var(--f-display); font-size:12px; font-weight:600; letter-spac
 .opSub{font-size:11.5px; line-height:1.25; margin-top:1px; color:var(--muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
 .opAmt{font-family:var(--f-num); font-weight:500; font-variant-numeric:tabular-nums; white-space:nowrap}
 .opAmt.pos{color:var(--pos)} .opAmt.neg{color:var(--neg)}
-.unsynced{font-size:10px; color:var(--warn); margin-left:5px}
+.unsynced{font-size:12px; color:var(--warn); margin-left:5px}
+.barTop .ic{color:var(--accent); margin-right:6px}
+.note .ic{margin-right:3px}
+label.f .ic{color:var(--accent); margin-right:4px}
+.chip .ic{color:var(--accent)}
 
 .dayHead{font-size:11px; font-weight:600; letter-spacing:.07em; text-transform:uppercase; color:var(--muted); padding:9px 2px 4px}
 .empty{padding:20px 16px; text-align:center; color:var(--muted); font-size:14px}
@@ -228,7 +239,11 @@ input.amount{font-family:var(--f-num); font-size:32px; font-weight:600; padding:
 .setRow:last-child{border-bottom:none}
 .setRow .lbl{flex:1; font-weight:500}
 .setRow input.inp{max-width:130px; text-align:right; font-family:var(--f-num)}
-.setRow input.inp.iconIn{max-width:52px; text-align:center; font-family:var(--f-body); font-size:17px; padding:8px 4px}
+/* Кнопка значка категории в настройках и сетка выбора в листе. */
+.iconPick{width:40px; height:40px; flex:none; border-radius:10px; border:1px solid var(--line); background:var(--bg); color:var(--accent); display:grid; place-items:center; font-size:18px}
+.iconGrid{display:grid; grid-template-columns:repeat(6,1fr); gap:8px}
+.iconGrid button{aspect-ratio:1; border-radius:12px; background:var(--chip); color:var(--accent); display:grid; place-items:center; font-size:22px; border:1.5px solid transparent}
+.iconGrid button[aria-pressed="true"]{border-color:var(--accent); background:var(--surface)}
 .searchRow{display:flex; flex-direction:column; gap:8px; position:sticky; top:0; z-index:5; background:var(--bg); padding-bottom:6px; margin:-2px -14px 0; padding-left:14px; padding-right:14px; padding-top:2px}
 .chips.scroll{flex-wrap:nowrap; overflow-x:auto; -webkit-overflow-scrolling:touch; scrollbar-width:none; padding-bottom:2px}
 .chips.scroll::-webkit-scrollbar{display:none}
@@ -297,12 +312,12 @@ input.amount{font-family:var(--f-num); font-size:32px; font-weight:600; padding:
 <main><div class="wrap" id="view"></div></main>
 
 <nav class="tabs" id="tabs">
-  <button data-tab="home" aria-current="true"><span class="ti">◍</span>Главная</button>
-  <button data-tab="hist"><span class="ti">≡</span>История</button>
-  <button data-tab="stat"><span class="ti">◔</span>Лимиты</button>
-  <button data-tab="debt"><span class="ti">◷</span>Долги</button>
-  <button data-tab="ai"><span class="ti">✦</span>Помощник</button>
-  <button data-tab="more"><span class="ti">•••</span>Ещё</button>
+  <button data-tab="home" aria-current="true"><span class="ti" data-ico="tabHome"></span>Главная</button>
+  <button data-tab="hist"><span class="ti" data-ico="tabHist"></span>История</button>
+  <button data-tab="stat"><span class="ti" data-ico="tabStat"></span>Лимиты</button>
+  <button data-tab="debt"><span class="ti" data-ico="tabDebt"></span>Долги</button>
+  <button data-tab="ai"><span class="ti" data-ico="tabAi"></span>Помощник</button>
+  <button data-tab="more"><span class="ti" data-ico="tabMore"></span>Ещё</button>
 </nav>
 
 <script>
@@ -331,26 +346,26 @@ input.amount{font-family:var(--f-num); font-size:32px; font-weight:600; padding:
 var CUR = "BYN";
 var DEFAULT_CONFIG = {
   accounts: [
-    {id:"cash",  name:"Наличные",    icon:"💵", start:0},
-    {id:"card",  name:"Карта",       icon:"💳", start:0},
-    {id:"other", name:"Другой счёт", icon:"🏦", start:0}
+    {id:"cash",  name:"Наличные",    icon:"cash", start:0},
+    {id:"card",  name:"Карта",       icon:"card", start:0},
+    {id:"other", name:"Другой счёт", icon:"bank", start:0}
   ],
   categories: [
-    {id:"food",  name:"Еда",         icon:"🍔"},
-    {id:"trans", name:"Транспорт",   icon:"🚌"},
-    {id:"taxi",  name:"Такси",       icon:"🚕"},
-    {id:"fuel",  name:"Топливо",     icon:"⛽"},
-    {id:"shop",  name:"Покупки",     icon:"🛍️"},
-    {id:"home",  name:"Жильё",       icon:"🏠"},
-    {id:"conn",  name:"Связь",       icon:"📱"},
-    {id:"fun",   name:"Развлечения", icon:"🎮"},
-    {id:"heal",  name:"Здоровье",    icon:"💊"},
-    {id:"misc",  name:"Прочее",      icon:"📦"}
+    {id:"food",  name:"Еда",         icon:"food"},
+    {id:"trans", name:"Транспорт",   icon:"bus"},
+    {id:"taxi",  name:"Такси",       icon:"car"},
+    {id:"fuel",  name:"Топливо",     icon:"fuel"},
+    {id:"shop",  name:"Покупки",     icon:"bag"},
+    {id:"home",  name:"Жильё",       icon:"house"},
+    {id:"conn",  name:"Связь",       icon:"phone"},
+    {id:"fun",   name:"Развлечения", icon:"game"},
+    {id:"heal",  name:"Здоровье",    icon:"health"},
+    {id:"misc",  name:"Прочее",      icon:"box"}
   ],
   incomeCats: [
-    {id:"salary", name:"Зарплата", icon:"💰"},
-    {id:"gift",   name:"Подарок",  icon:"🎁"},
-    {id:"other",  name:"Прочее",   icon:"📦"}
+    {id:"salary", name:"Зарплата", icon:"coins"},
+    {id:"gift",   name:"Подарок",  icon:"gift"},
+    {id:"other",  name:"Прочее",   icon:"box"}
   ],
   people: ["А1","Саня Мотич","Паша"],
   limits: {},
@@ -394,6 +409,87 @@ function money(n){
 }
 function fmt(n){ return money(n)+" "+CUR; }
 function esc(s){ return String(s==null?"":s).replace(/[&<>"']/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];}); }
+
+/* ---------- значки ----------
+   Один контурный набор вместо эмодзи: эмодзи у каждой системы свои, разного
+   веса и цвета, и рядом выглядят как вещи из разных приложений. Значок
+   хранится в конфиге именем из ICONS. Старые конфиги в базе хранят эмодзи,
+   их переводит EMO, поэтому переписывать ничего не нужно; эмодзи, которого
+   в таблице нет, показывается как есть. */
+var ICONS = {
+  cash:   '<rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2.5"/><path d="M6 12h.01M18 12h.01"/>',
+  card:   '<rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20M6 15h4"/>',
+  bank:   '<path d="M3 21h18M5 18v-7M9.5 18v-7M14.5 18v-7M19 18v-7M12 3l9 5H3z"/>',
+  wallet: '<path d="M19 7V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-3"/><path d="M3 7h16a2 2 0 0 1 2 2v7h-4a2.5 2.5 0 0 1 0-5h4"/>',
+  food:   '<path d="M3 2v7a2 2 0 0 0 2 2h4a2 2 0 0 0 2-2V2M7 2v20M21 15V2a5 5 0 0 0-5 5v6a2 2 0 0 0 2 2h3zm0 0v7"/>',
+  coffee: '<path d="M17 8h1a4 4 0 0 1 0 8h-1M3 8h14v9a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4zM6 2v2M10 2v2M14 2v2"/>',
+  cart:   '<circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2 2h3l2.7 13.4a2 2 0 0 0 2 1.6h9.7a2 2 0 0 0 2-1.6L23 6H6"/>',
+  bus:    '<rect x="4" y="3" width="16" height="15" rx="3"/><path d="M4 11h16M8 14.5h.01M16 14.5h.01M7 18v3M17 18v3"/>',
+  car:    '<path d="M5 11l1.6-4.6A2 2 0 0 1 8.5 5h7a2 2 0 0 1 1.9 1.4L19 11"/><rect x="3" y="11" width="18" height="6" rx="2"/><path d="M6 17v2M18 17v2M7 14h.01M17 14h.01"/>',
+  fuel:   '<path d="M3 22h12M4 9h10M14 22V4a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v18M14 13h2a2 2 0 0 1 2 2v2a2 2 0 0 0 4 0V9.8a2 2 0 0 0-.6-1.4L18 5"/>',
+  plane:  '<path d="M2 16l20-8-3-2-7 2-5-3-2 1 3 4-4 2-2-1-1 1z"/><path d="M4 21h16"/>',
+  bag:    '<path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4zM3 6h18M16 10a4 4 0 0 1-8 0"/>',
+  shirt:  '<path d="M16 3l5 3-2 5h-2v10H7V11H5L3 6l5-3a4 4 0 0 0 8 0z"/>',
+  house:  '<path d="M3 10l9-7 9 7v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M9 22v-8h6v8"/>',
+  zap:    '<path d="M13 2L3 14h9l-1 8 10-12h-9z"/>',
+  phone:  '<rect x="5" y="2" width="14" height="20" rx="2.5"/><path d="M11 18h2"/>',
+  game:   '<rect x="2" y="6" width="20" height="12" rx="6"/><path d="M6 12h4M8 10v4M15 11h.01M18 13h.01"/>',
+  music:  '<path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/>',
+  health: '<path d="M19 14c1.5-1.5 3-3.2 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.8 0-3 .5-4.5 2-1.5-1.5-2.7-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4 3 5.5l7 7z"/><path d="M3.5 12h5l1.5-3 3 5 1.5-2h6"/>',
+  study:  '<path d="M22 10L12 5 2 10l10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/>',
+  tool:   '<path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.8-3.8a6 6 0 0 1-7.9 7.9l-6.9 6.9a2.1 2.1 0 0 1-3-3l6.9-6.9a6 6 0 0 1 7.9-7.9z"/>',
+  gift:   '<rect x="3" y="8" width="18" height="4" rx="1"/><path d="M12 8v13M19 12v7a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-7M7.5 8a2.5 2.5 0 0 1 0-5C10 3 12 8 12 8s2-5 4.5-5a2.5 2.5 0 0 1 0 5"/>',
+  coins:  '<circle cx="8" cy="8" r="6"/><path d="M18.1 10.4A6 6 0 1 1 10.3 18M7 6h1v4M16.7 13.9l.7.7-2.8 2.8"/>',
+  tag:    '<path d="M12.6 2.6A2 2 0 0 0 11.2 2H4a2 2 0 0 0-2 2v7.2a2 2 0 0 0 .6 1.4l8.7 8.7a2.4 2.4 0 0 0 3.4 0l6.6-6.6a2.4 2.4 0 0 0 0-3.4z"/><path d="M7.5 7.5h.01"/>',
+  box:    '<path d="M21 8l-9-5-9 5v8l9 5 9-5z"/><path d="M3 8l9 5 9-5M12 13v8"/>',
+  user:   '<circle cx="12" cy="8" r="4"/><path d="M4 21v-1a8 8 0 0 1 16 0v1"/>',
+  /* операции */
+  expense:  '<path d="M5 2v20l2.3-1.5L9.7 22l2.3-1.5 2.3 1.5 2.4-1.5L19 22V2l-2.3 1.5L14.3 2 12 3.5 9.7 2 7.3 3.5z"/><path d="M9 8h6M9 12h6M9 16h3"/>',
+  income:   '<path d="M22 7l-8.5 8.5-5-5L2 17"/><path d="M16 7h6v6"/>',
+  transfer: '<path d="M16 3l4 4-4 4M20 7H4M8 21l-4-4 4-4M4 17h16"/>',
+  debt:     '<path d="M12 3v11M7 9l5 5 5-5"/><path d="M3 15v4a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-4"/>',
+  repay:    '<path d="M12 14V3M7 8l5-5 5 5"/><path d="M3 15v4a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-4"/>',
+  lend:     '<circle cx="12" cy="12" r="10"/><path d="M9 15l6-6M10 9h5v5"/>',
+  collect:  '<circle cx="12" cy="12" r="10"/><path d="M15 9l-6 6M14 15H9v-5"/>',
+  /* служебные */
+  none:  '<circle cx="12" cy="12" r="9"/><path d="M5.6 18.4L18.4 5.6"/>',
+  warn:  '<path d="M10.3 3.9L1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><path d="M12 9v4M12 17h.01"/>',
+  clock: '<circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/>',
+  dot:   '<circle cx="12" cy="12" r="2"/>',
+  tabHome: '<rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/>',
+  tabHist: '<path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/>',
+  tabStat: '<path d="M21.2 15.9A10 10 0 1 1 8 2.8"/><path d="M22 12A10 10 0 0 0 12 2v10z"/>',
+  tabDebt: '<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.9M16 3.1a4 4 0 0 1 0 7.8"/>',
+  tabAi:   '<path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9z"/><path d="M19 3v4M21 5h-4"/>',
+  tabMore: '<circle cx="5" cy="12" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/>'
+};
+/* Что можно выбрать для категории в настройках. */
+var PICK_ICONS = ["food","coffee","cart","bag","bus","car","fuel","plane","house","zap","phone","game",
+                  "music","health","study","shirt","tool","gift","coins","wallet","cash","card","tag","box"];
+var EMO = {
+  "💵":"cash","💶":"cash","💴":"cash","💳":"card","🏦":"bank","👛":"wallet","👜":"bag",
+  "🍔":"food","🍕":"food","🍽":"food","🥗":"food","🍎":"food","☕":"coffee","🛒":"cart",
+  "🚌":"bus","🚇":"bus","🚎":"bus","🚕":"car","🚗":"car","🚙":"car","⛽":"fuel","✈":"plane",
+  "🛍":"bag","👕":"shirt","👗":"shirt","🏠":"house","🏡":"house","⚡":"zap","💡":"zap",
+  "📱":"phone","📞":"phone","🎮":"game","🎬":"game","🎵":"music","🎧":"music",
+  "💊":"health","🏥":"health","❤":"health","🎓":"study","📚":"study","🔧":"tool","🛠":"tool",
+  "🎁":"gift","💰":"coins","🪙":"coins","💸":"repay","🏷":"tag","📦":"box","🧾":"expense",
+  "🔄":"transfer","🤝":"debt","📤":"lend","📥":"collect","∅":"none","⚠":"warn","⏳":"clock","•":"dot"
+};
+function iconKey(v){
+  var s = String(v==null?"":v);
+  if(ICONS[s]) return s;
+  return EMO[s.replace(/️/g,"")] || "";
+}
+/* Готовая разметка значка. Всё, что не распознано, выводится текстом
+   через esc, так что значок из конфига не может внедрить разметку. */
+function ico(v){
+  var k = iconKey(v);
+  if(k) return '<svg class="ic" viewBox="0 0 24 24" aria-hidden="true">'+ICONS[k]+'</svg>';
+  return '<span class="emo">'+esc(v)+'</span>';
+}
+/* Значки в разметке страницы, например в панели вкладок. */
+document.querySelectorAll("[data-ico]").forEach(function(el){ el.innerHTML = ico(el.dataset.ico); });
 /* Строгий разбор суммы операции. Ничего не спасает и не выпрямляет:
    либо введено корректное положительное число с точностью до копейки,
    либо NaN и человек правит ввод сам. Минус не превращается в плюс,
@@ -1059,7 +1155,7 @@ function renderHome(){
   }
   h += '<div class="sect"><h2 class="sh">Счета</h2><div class="card">';
   state.config.accounts.forEach(function(a){
-    h += '<div class="accRow"><div class="accIco">'+esc(a.icon)+'</div><div class="accName">'+esc(a.name)+'</div>'+
+    h += '<div class="accRow"><div class="accIco">'+ico(a.icon)+'</div><div class="accName">'+esc(a.name)+'</div>'+
          '<div class="accVal">'+esc(fmt(FIN.accountBalance(state.config, ops(), a.id)))+'</div></div>';
   });
   h += '</div></div>';
@@ -1071,12 +1167,9 @@ function renderHome(){
     '<div><div class="k">Расходы</div><div class="v" style="color:var(--neg)">'+esc(money(mst.expense))+'</div></div></div></div>';
   h += '<button class="btn" data-act="expense" style="font-size:16px; min-height:56px">− Записать расход</button>';
   h += '<div class="actions">'+
-    '<button class="act" data-act="income"><b>💰</b>Доход</button>'+
-    '<button class="act" data-act="transfer"><b>🔄</b>Перевод</button>'+
-    '<button class="act" data-act="debt"><b>🤝</b>Взял в долг</button>'+
-    '<button class="act" data-act="repay"><b>💸</b>Отдал долг</button>'+
-    '<button class="act" data-act="lend"><b>📤</b>Дал в долг</button>'+
-    '<button class="act" data-act="collect"><b>📥</b>Мне вернули</button></div>';
+    '<button class="act" data-act="income"><b>'+ico("income")+'</b>Доход</button>'+
+    '<button class="act" data-act="transfer"><b>'+ico("transfer")+'</b>Перевод</button>'+
+    debtActs();
   h += '<div class="sect"><h2 class="sh">Последние операции</h2><div class="card">';
   h += last.length? last.map(opRowHTML).join("") : '<div class="empty"><b>Пока пусто</b>Нажми Записать расход или плюс внизу справа.</div>';
   h += '</div>';
@@ -1085,34 +1178,45 @@ function renderHome(){
   view.innerHTML = h;
 }
 
+/* Четыре кнопки долгов: на главной и на вкладке Долги. Закрывает сетку .actions. */
+function debtActs(){
+  return '<button class="act" data-act="debt"><b>'+ico("debt")+'</b>Взял в долг</button>'+
+    '<button class="act" data-act="repay"><b>'+ico("repay")+'</b>Отдал долг</button>'+
+    '<button class="act" data-act="lend"><b>'+ico("lend")+'</b>Дал в долг</button>'+
+    '<button class="act" data-act="collect"><b>'+ico("collect")+'</b>Мне вернули</button></div>';
+}
+
 function opMeta(o){
-  var a = Math.abs(Number(o.amount)||0), m = {ico:"•", title:"", sub:"", amt:"", cls:""};
-  if(o.type==="income"){ var c=catObj(o.category,true); m.ico=c.icon; m.title=c.name; m.cls="pos"; m.amt="+"+money(a); m.sub=accIcon(o.account)+" "+FIN.nameOfAccount(state.config,o.account); }
-  else if(o.type==="expense"){ var c2=catObj(o.category,false); m.ico=c2.icon; m.title=c2.name; m.cls="neg"; m.amt="−"+money(a); m.sub=accIcon(o.account)+" "+FIN.nameOfAccount(state.config,o.account); }
-  else if(o.type==="transfer"){ m.ico="🔄"; m.title="Перевод"; m.amt=money(a); m.sub=FIN.nameOfAccount(state.config,o.account)+" → "+FIN.nameOfAccount(state.config,o.toAccount); }
+  /* subIco — значок счёта перед подписью. В саму подпись он не входит:
+     по ней ещё и ищут. */
+  var a = Math.abs(Number(o.amount)||0), m = {ico:"dot", title:"", sub:"", subIco:"", amt:"", cls:""};
+  if(o.type==="income"){ var c=catObj(o.category,true); m.ico=c.icon; m.title=c.name; m.cls="pos"; m.amt="+"+money(a); m.subIco=accIcon(o.account); m.sub=FIN.nameOfAccount(state.config,o.account); }
+  else if(o.type==="expense"){ var c2=catObj(o.category,false); m.ico=c2.icon; m.title=c2.name; m.cls="neg"; m.amt="−"+money(a); m.subIco=accIcon(o.account); m.sub=FIN.nameOfAccount(state.config,o.account); }
+  else if(o.type==="transfer"){ m.ico="transfer"; m.title="Перевод"; m.amt=money(a); m.sub=FIN.nameOfAccount(state.config,o.account)+" → "+FIN.nameOfAccount(state.config,o.toAccount); }
   else if(o.type==="debt"){
     /* Долги без счёта записаны до того, как долг стал двигать деньги.
        Показываем их без знака: знак означал бы движение, которого не было. */
     var acc = !!o.account;
-    m.ico="🤝"; m.title="Взял в долг"; m.cls=acc?"pos":""; m.amt=(acc?"+":"")+money(a);
+    m.ico="debt"; m.title="Взял в долг"; m.cls=acc?"pos":""; m.amt=(acc?"+":"")+money(a);
     m.sub="Должен: "+(o.person||"—")+" · "+(acc? FIN.nameOfAccount(state.config,o.account) : "без счёта");
   }
-  else if(o.type==="repay"){ m.ico="💸"; m.title="Отдал долг"; m.cls="neg"; m.amt="−"+money(a); m.sub=(o.person||"—")+" · "+FIN.nameOfAccount(state.config,o.account); }
+  else if(o.type==="repay"){ m.ico="repay"; m.title="Отдал долг"; m.cls="neg"; m.amt="−"+money(a); m.sub=(o.person||"—")+" · "+FIN.nameOfAccount(state.config,o.account); }
   else if(o.type==="lend"){
     var lacc = !!o.account;
-    m.ico="📤"; m.title="Дал в долг"; m.cls=lacc?"neg":""; m.amt=(lacc?"−":"")+money(a);
+    m.ico="lend"; m.title="Дал в долг"; m.cls=lacc?"neg":""; m.amt=(lacc?"−":"")+money(a);
     m.sub=(o.person||"—")+" · "+(lacc? FIN.nameOfAccount(state.config,o.account) : "без счёта");
   }
-  else if(o.type==="collect"){ m.ico="📥"; m.title="Мне вернули"; m.cls="pos"; m.amt="+"+money(a); m.sub=(o.person||"—")+" · "+FIN.nameOfAccount(state.config,o.account); }
+  else if(o.type==="collect"){ m.ico="collect"; m.title="Мне вернули"; m.cls="pos"; m.amt="+"+money(a); m.sub=(o.person||"—")+" · "+FIN.nameOfAccount(state.config,o.account); }
   if(o.note) m.sub += " · "+o.note;
   return m;
 }
 function opRowHTML(o){
   var m = opMeta(o), d = new Date(o.ts);
   var hhmm = String(d.getHours()).padStart(2,"0")+":"+String(d.getMinutes()).padStart(2,"0");
-  var wait = state.pendingIds[o.id]? '<span class="unsynced">⏳</span>':'';
-  return '<button class="opRow" data-op="'+esc(o.id)+'"><div class="opIco">'+esc(m.ico)+'</div>'+
-    '<div class="opMid"><div class="opTitle">'+esc(m.title)+wait+'</div><div class="opSub">'+esc(hhmm+" · "+m.sub)+'</div></div>'+
+  var wait = state.pendingIds[o.id]? '<span class="unsynced" title="ещё не в базе">'+ico("clock")+'</span>':'';
+  return '<button class="opRow" data-op="'+esc(o.id)+'"><div class="opIco">'+ico(m.ico)+'</div>'+
+    '<div class="opMid"><div class="opTitle">'+esc(m.title)+wait+'</div>'+
+    '<div class="opSub">'+esc(hhmm+" · ")+(m.subIco? ico(m.subIco)+" " : "")+esc(m.sub)+'</div></div>'+
     '<div class="opAmt '+m.cls+'">'+esc(m.amt)+'</div></button>';
 }
 function dayLabel(ts){
@@ -1164,7 +1268,7 @@ function renderHist(){
     if(showBroken){
       h += '<div style="margin-top:8px">'+broken.map(function(o){
         var m = opMeta(o);
-        return '<button class="opRow" data-bad="'+esc(o.id)+'"><div class="opIco">⚠️</div>'+
+        return '<button class="opRow" data-bad="'+esc(o.id)+'"><div class="opIco bad">'+ico("warn")+'</div>'+
           '<div class="opMid"><div class="opTitle">'+esc(m.title||o.type)+'</div>'+
           '<div class="opSub">'+esc("не учитывается · "+(m.sub||""))+'</div></div>'+
           '<div class="opAmt">'+esc(String(o.amount))+'</div></button>';
@@ -1197,7 +1301,7 @@ function renderStat(){
   var from = periodStart(), st = FIN.periodStats(ops(), from, state.config);
   var limitsBlock = renderLimits();
   var cats = Object.keys(st.byCat).map(function(id){
-    var c = id==="__debt"? {name:"Долги", icon:"🤝"} : catObj(id,false);
+    var c = id==="__debt"? {name:"Долги", icon:"debt"} : catObj(id,false);
     return {id:id, name:c.name, icon:c.icon, sum:st.byCat[id]};
   }).sort(function(a,b){ return b.sum-a.sum; });
 
@@ -1228,7 +1332,7 @@ function renderStat(){
     h += '<div class="bars">';
     cats.forEach(function(c){
       var pct = st.expense>0? Math.round(c.sum/st.expense*100) : 0;
-      h += '<div><div class="barTop"><span>'+esc(c.icon+" "+c.name)+'</span><span>'+esc(money(c.sum))+' · '+pct+'%</span></div>'+
+      h += '<div><div class="barTop"><span>'+ico(c.icon)+esc(c.name)+'</span><span>'+esc(money(c.sum))+' · '+pct+'%</span></div>'+
            '<div class="track"><div class="fill" style="width:'+pct+'%"></div></div></div>';
     });
     h += '</div>';
@@ -1252,9 +1356,9 @@ function renderLimits(){
     var spent = FIN.spentInCategory(ops(), c.id, monthFrom, state.config);
     var over = spent>lim, pct = Math.min(100, Math.round(spent/lim*100));
     var cls = over? "over" : (pct>=80? "warn":"");
-    h += '<div><div class="barTop"><span>'+esc(c.icon+" "+c.name)+'</span><span>'+esc(money(spent))+' / '+esc(money(lim))+'</span></div>'+
+    h += '<div><div class="barTop"><span>'+ico(c.icon)+esc(c.name)+'</span><span>'+esc(money(spent))+' / '+esc(money(lim))+'</span></div>'+
          '<div class="track"><div class="fill '+cls+'" style="width:'+(over?100:pct)+'%"></div></div>'+
-         '<div class="note '+(over?"over":"")+'">'+(over? "⚠️ Лимит превышен на "+esc(fmt(FIN.r2(spent-lim))) : "Осталось "+esc(fmt(FIN.r2(lim-spent))))+'</div></div>';
+         '<div class="note '+(over?"over":"")+'">'+(over? ico("warn")+"Лимит превышен на "+esc(fmt(FIN.r2(spent-lim))) : "Осталось "+esc(fmt(FIN.r2(lim-spent))))+'</div></div>';
   });
   return h + '</div></div></div>';
 }
@@ -1270,15 +1374,11 @@ function renderDebt(){
   var theirs = FIN.claimBreakdown(state.config, all).filter(function(r){ return r.amount!==0; });
 
   var h = debtSection("Я должен", FIN.totalDebt(state.config, all), mine,
-                      "🤝", "остаток долга", "переплата", "var(--neg)");
+                      "debt", "остаток долга", "переплата", "var(--neg)");
   h += debtSection("Мне должны", FIN.totalClaims(state.config, all), theirs,
-                   "📤", "ещё не вернули", "вернули лишнего", "var(--pos)");
+                   "lend", "ещё не вернули", "вернули лишнего", "var(--pos)");
 
-  h += '<div class="actions">'+
-    '<button class="act" data-act="debt"><b>🤝</b>Взял в долг</button>'+
-    '<button class="act" data-act="repay"><b>💸</b>Отдал долг</button>'+
-    '<button class="act" data-act="lend"><b>📤</b>Дал в долг</button>'+
-    '<button class="act" data-act="collect"><b>📥</b>Мне вернули</button></div>';
+  h += '<div class="actions">'+debtActs();
   h += '<div class="hint">Все четыре операции двигают деньги на счёте: взял и вернули приносят, отдал и дал уносят. Отдельный расход или доход рядом создавать не надо, иначе сумма посчитается дважды. Отдавать и получать можно частями, сколько угодно раз.</div>';
   view.innerHTML = h;
 }
@@ -1292,7 +1392,7 @@ function debtSection(title, total, rows, icon, wordOpen, wordOver, color){
     '</div><div class="card">';
   if(!rows.length) h += '<div class="empty">Здесь пусто.</div>';
   else rows.forEach(function(r){
-    h += '<div class="accRow"><div class="accIco">'+esc(icon)+'</div><div class="accName">'+esc(r.person)+
+    h += '<div class="accRow"><div class="accIco">'+ico(icon)+'</div><div class="accName">'+esc(r.person)+
       '<div class="opSub">'+esc(r.amount>0? wordOpen : wordOver)+(r.listed? "" : " · убран из списка")+'</div></div>'+
       '<div class="accVal" style="color:'+(r.amount>0?color:"var(--muted)")+'">'+esc(fmt(r.amount))+'</div></div>';
   });
@@ -1302,7 +1402,7 @@ function debtSection(title, total, rows, icon, wordOpen, wordOver, color){
 function renderMore(){
   var h = '<div class="sect"><h2 class="sh">Стартовые остатки</h2><div class="card">';
   state.config.accounts.forEach(function(a){
-    h += '<div class="setRow"><div class="accIco">'+esc(a.icon)+'</div><div class="lbl">'+esc(a.name)+'</div>'+
+    h += '<div class="setRow"><div class="accIco">'+ico(a.icon)+'</div><div class="lbl">'+esc(a.name)+'</div>'+
       '<input class="inp" inputmode="decimal" id="start_'+esc(a.id)+'" value="'+esc(String(a.start))+'"></div>';
   });
   h += '</div><div class="hint">Деньги, которые были на счетах до того, как ты начал записывать операции.</div></div>';
@@ -1310,7 +1410,7 @@ function renderMore(){
   h += '<div class="sect"><h2 class="sh">Месячные лимиты</h2><div class="card">';
   state.config.categories.forEach(function(c){
     var v = state.config.limits[c.id]!=null? state.config.limits[c.id] : "";
-    h += '<div class="setRow"><div class="accIco">'+esc(c.icon)+'</div><div class="lbl">'+esc(c.name)+'</div>'+
+    h += '<div class="setRow"><div class="accIco">'+ico(c.icon)+'</div><div class="lbl">'+esc(c.name)+'</div>'+
       '<input class="inp" inputmode="decimal" placeholder="нет" id="lim_'+esc(c.id)+'" value="'+esc(String(v))+'"></div>';
   });
   h += '</div></div>';
@@ -1318,11 +1418,11 @@ function renderMore(){
   h += '<div class="sect"><h2 class="sh">Категории расходов</h2><div class="card">';
   state.config.categories.forEach(function(c,i){
     h += '<div class="setRow">'+
-      '<input class="inp iconIn" id="ico_'+esc(c.id)+'" value="'+esc(c.icon)+'" maxlength="6" aria-label="Значок категории">'+
+      '<button class="iconPick" data-icopick="'+esc(c.id)+'" aria-label="Сменить значок">'+ico(c.icon)+'</button>'+
       '<div class="lbl">'+esc(c.name)+'</div>'+
       '<button class="miniBtn" data-rmcat="'+i+'">Убрать</button></div>';
   });
-  h += '<div class="setRow"><input class="inp" id="newCatIcon" placeholder="🙂" style="max-width:62px; text-align:center">'+
+  h += '<div class="setRow"><button class="iconPick" id="newCatIcon" data-icopick="" data-val="box" aria-label="Значок новой категории">'+ico("box")+'</button>'+
        '<input class="inp" id="newCat" placeholder="Название" style="max-width:none; text-align:left">'+
        '<button class="miniBtn solid" data-act="addCat">Добавить</button></div></div>'+
        '<div class="hint">Убрать можно только категорию, по которой ещё нет операций.</div></div>';
@@ -1375,13 +1475,18 @@ function renderMore(){
     });
   });
   /* Значок меняется прямо в списке: иначе привести старые категории к
-     одному виду было бы нечем, ведь удалить категорию с операциями нельзя. */
-  state.config.categories.forEach(function(c){
-    var ic = document.getElementById("ico_"+c.id);
-    if(ic) ic.addEventListener("change", function(){
-      var v = ic.value.trim();
-      if(!v){ ic.value = c.icon; return; }
-      c.icon = v; markConfig(); render(); toast("Значок изменён");
+     одному виду было бы нечем, ведь удалить категорию с операциями нельзя.
+     Пустой data-icopick это кнопка новой категории: выбор запоминается на
+     ней самой, а в конфиг попадает по кнопке Добавить. */
+  view.querySelectorAll("[data-icopick]").forEach(function(btn){
+    btn.addEventListener("click", function(){
+      var cat = btn.dataset.icopick
+        ? state.config.categories.filter(function(c){ return c.id===btn.dataset.icopick; })[0] : null;
+      var cur = cat? iconKey(cat.icon) : btn.dataset.val;
+      sheetIconPick(cur, function(k){
+        if(cat){ cat.icon = k; markConfig(); render(); toast("Значок изменён"); }
+        else { btn.dataset.val = k; btn.innerHTML = ico(k); }
+      });
     });
   });
   state.config.categories.forEach(function(c){
@@ -1413,9 +1518,19 @@ function toast(msg){
   var t = document.createElement("div"); t.className="toast"; t.textContent=msg;
   document.body.appendChild(t); setTimeout(function(){ t.remove(); }, 2300);
 }
+function sheetIconPick(cur, onPick){
+  openSheet("Значок", '<div class="iconGrid">'+PICK_ICONS.map(function(k){
+    return '<button type="button" data-k="'+k+'" aria-pressed="'+String(k===cur)+'">'+ico(k)+'</button>';
+  }).join("")+'</div>', function(root){
+    root.addEventListener("click", function(e){
+      var b = e.target.closest("[data-k]"); if(!b) return;
+      closeSheet(); onPick(b.dataset.k);
+    });
+  });
+}
 function chipsHTML(items, name, sel){
   return '<div class="chips" data-chips="'+esc(name)+'">'+items.map(function(i){
-    return '<button type="button" class="chip" data-val="'+esc(i.id)+'" aria-pressed="'+String(i.id===sel)+'">'+esc((i.icon||"")+" "+i.name)+'</button>';
+    return '<button type="button" class="chip" data-val="'+esc(i.id)+'" aria-pressed="'+String(i.id===sel)+'">'+(i.icon? ico(i.icon) : "")+esc(i.name)+'</button>';
   }).join("")+'</div>';
 }
 function wireChips(root){
@@ -1477,17 +1592,17 @@ function focusAmount(root){
 }
 function sheetQuickAdd(){
   var rows = [
-    ["expense", "🧾", "Расход",  "покупка, услуга, поездка", true],
-    ["income",  "💰", "Доход",   "зарплата, подарок", false],
-    ["transfer","🔄", "Перевод", "между своими счетами, баланс не меняется", false],
-    ["debt",    "🤝", "Взял в долг",  "деньги пришли, ты теперь должен", false],
-    ["repay",   "💸", "Отдал долг",   "деньги ушли, твой долг уменьшился", false],
-    ["lend",    "📤", "Дал в долг",   "деньги ушли, теперь должны тебе", false],
-    ["collect", "📥", "Мне вернули",  "деньги пришли, тебе должны меньше", false]
+    ["expense", "expense",  "Расход",  "покупка, услуга, поездка", true],
+    ["income",  "income",   "Доход",   "зарплата, подарок", false],
+    ["transfer","transfer", "Перевод", "между своими счетами, баланс не меняется", false],
+    ["debt",    "debt",     "Взял в долг",  "деньги пришли, ты теперь должен", false],
+    ["repay",   "repay",    "Отдал долг",   "деньги ушли, твой долг уменьшился", false],
+    ["lend",    "lend",     "Дал в долг",   "деньги ушли, теперь должны тебе", false],
+    ["collect", "collect",  "Мне вернули",  "деньги пришли, тебе должны меньше", false]
   ];
   openSheet("Что записываем", '<div class="pickList">'+rows.map(function(r){
     return '<button class="pick'+(r[4]?" primary":"")+'" data-pick="'+r[0]+'">'+
-      '<span class="pi">'+r[1]+'</span><span>'+esc(r[2])+'<span class="ps">'+esc(r[3])+'</span></span></button>';
+      '<span class="pi">'+ico(r[1])+'</span><span>'+esc(r[2])+'<span class="ps">'+esc(r[3])+'</span></span></button>';
   }).join("")+'</div>', function(root){
     root.addEventListener("click", function(e){
       var b = e.target.closest("[data-pick]"); if(!b) return;
@@ -1553,7 +1668,7 @@ function sheetTransfer(ex){
    трогать нельзя. Пустой id это ровно то состояние, в котором лежат долги,
    записанные до того, как долг стал двигать деньги. */
 function accountsOrNone(){
-  return state.config.accounts.concat([{id:"", name:"не трогать баланс", icon:"∅"}]);
+  return state.config.accounts.concat([{id:"", name:"не трогать баланс", icon:"none"}]);
 }
 
 function peopleChips(o, icon, amountOf){
@@ -1566,7 +1681,7 @@ function peopleChips(o, icon, amountOf){
 
 function sheetDebt(ex){
   var o = ex||{};
-  var people = peopleChips(o, "🤝", null);
+  var people = peopleChips(o, "user", null);
   if(!people.length){ toast("Сначала добавь человека на вкладке Ещё"); return; }
   if(!state.config.accounts.length){ toast("Нет ни одного счёта"); return; }
   var body = amtField(o)+
@@ -1589,7 +1704,7 @@ function sheetDebt(ex){
 
 function sheetLend(ex){
   var o = ex||{};
-  var people = peopleChips(o, "📤", null);
+  var people = peopleChips(o, "user", null);
   if(!people.length){ toast("Сначала добавь человека на вкладке Ещё"); return; }
   if(!state.config.accounts.length){ toast("Нет ни одного счёта"); return; }
   var body = amtField(o)+
@@ -1612,7 +1727,7 @@ function sheetLend(ex){
 
 function sheetCollect(ex){
   var o = ex||{};
-  var people = peopleChips(o, "📥", function(p){ return FIN.claimFor(ops(), p, null, state.config); });
+  var people = peopleChips(o, "user", function(p){ return FIN.claimFor(ops(), p, null, state.config); });
   if(!people.length){ toast("Сначала добавь человека на вкладке Ещё"); return; }
   if(!state.config.accounts.length){ toast("Нет ни одного счёта"); return; }
   var body = amtField(o)+
@@ -1682,7 +1797,7 @@ function sheetBroken(o){
 
 function sheetSetup(){
   var body = state.config.accounts.map(function(a){
-    return '<label class="f">'+esc(a.icon+" "+a.name)+'<input class="inp amount" id="s_'+esc(a.id)+'" inputmode="decimal" placeholder="0,00" value="'+esc(String(a.start||""))+'"></label>';
+    return '<label class="f"><span>'+ico(a.icon)+esc(a.name)+'</span><input class="inp amount" id="s_'+esc(a.id)+'" inputmode="decimal" placeholder="0,00" value="'+esc(String(a.start||""))+'"></label>';
   }).join("")+'<div class="rowBtns"><button class="btn" id="save">Сохранить</button></div>';
   openSheet("Стартовые остатки", body, function(root){
     root.querySelector("#save").addEventListener("click", function(){
@@ -1849,7 +1964,7 @@ view.addEventListener("click", function(e){
   }
   else if(act==="addCat"){
     var nm = document.getElementById("newCat").value.trim();
-    var ic = document.getElementById("newCatIcon").value.trim() || "📦";
+    var ic = document.getElementById("newCatIcon").dataset.val || "box";
     if(!nm) return;
     var id = "c"+uid().slice(0,6);
     state.config.categories = state.config.categories.concat([{id:id, name:nm, icon:ic}]);
